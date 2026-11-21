@@ -291,9 +291,25 @@
   .rchip small{font-size:9.5px;font-weight:650;color:var(--muted)}
   .rchip.on{background:var(--accent-soft);border-color:color-mix(in srgb, var(--accent) 50%, var(--line));color:var(--accent-deep)}
   .rchip.on small{color:color-mix(in srgb, var(--accent-deep) 70%, var(--muted))}
-  .rend{display:flex;align-items:center;gap:7px}
-  .rend > span{font-size:11.5px;color:var(--muted);white-space:nowrap}
-  .rend .inp{height:38px;font-size:14px;min-width:0}
+  .rfields{display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
+  .rfields.two{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .rfld{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .rfld-k{display:flex;align-items:baseline;gap:4px;min-height:14px;padding-left:2px;font-size:11px;font-weight:650;color:var(--muted)}
+  .rfld .inp{width:100%;height:38px;min-width:0;padding:0 7px;font-size:13.5px}
+  .rfields[data-mode=day] .rfld .inp{font-size:14px}
+  .rsum{margin:0;padding-left:2px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .rsum b{color:var(--ink-2);font-weight:650}
+  .rsum[hidden]{display:none}
+  .catnew{display:flex;flex-direction:column;gap:6px;padding:8px 9px;border-radius:11px;background:color-mix(in srgb, var(--accent-soft) 32%, var(--paper-2));border:1px dashed color-mix(in srgb, var(--accent) 36%, var(--line))}
+  .catnew[hidden]{display:none}
+  .catnew .inp{height:36px;font-size:14px;background:var(--card)}
+  .catnew-sub{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+  .catnew-k{font-size:11px;font-weight:650;color:var(--muted)}
+  .catsw{display:flex;gap:6px}
+  .csw{width:22px;height:22px;flex:0 0 auto;border-radius:50%;background:var(--c);border:0;transition:box-shadow .15s, transform .15s}
+  .csw:hover{transform:scale(1.08)}
+  .csw.on{box-shadow:0 0 0 2px var(--card), 0 0 0 3.5px var(--c)}
+  .catnew-hint{margin-left:auto;font-size:10.5px;color:var(--muted);line-height:1.35}
   .ev-range{margin:0 0 2px;font-size:11px;font-weight:700;letter-spacing:.01em;color:color-mix(in srgb, var(--c, var(--accent)) 66%, var(--ink))}
   .ev-range b{font-weight:700;font-variant-numeric:tabular-nums}
 
@@ -738,6 +754,33 @@
   };
   var CAT_ORDER = Object.keys(CATS);
 
+  /* 직접 만든 카테고리 — 기본 4개는 늘 먼저 나오고, 새로 만든 것은 뒤에 붙습니다 */
+  var CAT_SWATCH = [
+    { k: '라벤더', c: '#8B7BB8' },
+    { k: '민트', c: '#4E9A8E' },
+    { k: '코랄', c: '#D9705F' },
+    { k: '블루', c: '#5B7FA8' },
+    { k: '옐로우', c: '#C2A02E' }
+  ];
+  var NEW_CAT = '__new';
+
+  function customCats() {
+    return (state && state.cats && typeof state.cats === 'object' && !Array.isArray(state.cats)) ? state.cats : {};
+  }
+  function catOf(name) {
+    var cc = customCats();
+    if (cc[name] && cc[name].c) return cc[name];
+    return CATS[name] || CATS['가족'];
+  }
+  function catOrder() {
+    var cc = customCats();
+    var out = CAT_ORDER.slice();
+    Object.keys(cc).forEach(function (k) {
+      if (out.indexOf(k) < 0 && !CATS[k]) out.push(k);
+    });
+    return out;
+  }
+
   var ISSUERS = [
     { k: '신한', c: '#0046FF' },
     { k: '국민', c: '#F2B705' },
@@ -850,18 +893,29 @@
       memos: {},
       cards: [],
       expenses: [],
-      campaigns: []
+      campaigns: [],
+      cats: {}
     };
   }
 
   function normalize(s) {
     if (!s || typeof s !== 'object') return seed();
+    var inCats = (s.cats && typeof s.cats === 'object' && !Array.isArray(s.cats)) ? s.cats : {};
+    var cats = {};
+    Object.keys(inCats).forEach(function (k) {
+      var v = inCats[k] || {};
+      var nm = String(k || '').trim().slice(0, 10);
+      if (!nm || CATS[nm] || nm === NEW_CAT) return;
+      var col = (typeof v.c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(v.c)) ? v.c : CAT_SWATCH[0].c;
+      cats[nm] = { c: col, e: v.e ? String(v.e).slice(0, 4) : '🏷️' };
+    });
+    s.cats = cats;
     s.events = Array.isArray(s.events) ? s.events.filter(Boolean).map(function (e) {
       var d = e.date || todayStr();
       var ed = (typeof e.endDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(e.endDate) && e.endDate > d) ? e.endDate : '';
       return {
         id: e.id || uid(), date: d, endDate: ed, time: e.time || '',
-        title: e.title || '', cat: CATS[e.cat] ? e.cat : '가족', done: !!e.done
+        title: e.title || '', cat: (CATS[e.cat] || cats[e.cat]) ? e.cat : '가족', done: !!e.done
       };
     }) : [];
     s.memos = (s.memos && typeof s.memos === 'object' && !Array.isArray(s.memos)) ? s.memos : {};
@@ -922,6 +976,7 @@
   var showCampForm = false;
   var cheerMode = 'self';
   var cheerOffset = 0;
+  var lastCat = '';
 
   function cheerList() { return CHEER[cheerMode === 'partner' ? 'partner' : 'self']; }
   function cheerText() {
@@ -1030,7 +1085,7 @@
      오늘
   ============================================================ */
   function evRow(e) {
-    var cat = CATS[e.cat] || CATS['가족'];
+    var cat = catOf(e.cat);
     var span = evSpans(e);
     var days = span ? dayDiff(evEnd(e), e.date) + 1 : 0;
     return '<li class="ev' + (e.done ? ' done' : '') + (span ? ' span' : '') + '" style="--c:' + cat.c + '">' +
@@ -1047,28 +1102,101 @@
       '</li>';
   }
 
+  /* 기간 선택(하루 / 일주일 7일 / 기간 지정) — 시작일·종료일 입력칸을 모드에 맞게 바꿈 */
+  function rangeParts(rf) {
+    return {
+      box: rf.querySelector('.rfields'),
+      startEl: rf.querySelector('input[name=startDate]'),
+      endEl: rf.querySelector('input[name=endDate]'),
+      endWrap: rf.querySelector('.rfld-end'),
+      startK: rf.querySelector('[data-role=start-k]'),
+      note: null,
+      sum: rf.querySelector('.rsum')
+    };
+  }
+
+  function rangeSummary(rf) {
+    var p = rangeParts(rf);
+    if (!p.sum || !p.startEl || !p.endEl) return;
+    var mode = rf.getAttribute('data-range') || 'day';
+    var s = p.startEl.value, e = p.endEl.value;
+    if (mode === 'day' || !s || !e || e < s) { p.sum.hidden = true; return; }
+    p.sum.hidden = false;
+    p.sum.innerHTML = '<b>' + mmdd(s) + '(' + weekday(s) + ')</b> ~ <b>' + mmdd(e) + '(' + weekday(e) + ')</b> · ' + (dayDiff(e, s) + 1) + '일간';
+  }
+
+  function setRangeMode(rf, mode) {
+    var p = rangeParts(rf);
+    if (!p.startEl || !p.endEl) return;
+    var base = rf.getAttribute('data-date') || todayStr();
+    if (!p.startEl.value) p.startEl.value = base;
+    var s = p.startEl.value || base;
+    if (mode !== 'custom') mode = 'day';
+
+    rf.setAttribute('data-range', mode);
+    $$('.rchip', rf).forEach(function (b) {
+      var on = b.getAttribute('data-range') === mode;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+
+    var two = mode === 'custom';
+    if (p.box) { p.box.classList.toggle('two', two); p.box.setAttribute('data-mode', mode); }
+    if (p.endWrap) p.endWrap.hidden = !two;
+    if (p.startK) p.startK.textContent = two ? '시작일' : '날짜';
+
+    if (!two) {
+      p.endEl.value = '';
+      p.endEl.removeAttribute('min');
+    } else {
+      if (!p.endEl.value || p.endEl.value <= s) p.endEl.value = addDays(s, 1);
+      p.endEl.setAttribute('min', s);
+    }
+    rangeSummary(rf);
+  }
+
   function eventForm(date) {
+    var selCat = (lastCat && (CATS[lastCat] || customCats()[lastCat])) ? lastCat : '가족';
     return '<form class="add-form" data-form="event" data-date="' + date + '" data-range="day">' +
       '<input class="inp" name="title" placeholder="일정 추가 (예: 유치원 준비물 챙기기)" required maxlength="80">' +
       '<div class="add-range">' +
       '<div class="rchips" role="group" aria-label="기간 선택">' +
       '<button type="button" class="rchip on" data-act="range-chip" data-range="day" aria-pressed="true">하루</button>' +
-      '<button type="button" class="rchip" data-act="range-chip" data-range="week" aria-pressed="false">일주일 <small>7일</small></button>' +
       '<button type="button" class="rchip" data-act="range-chip" data-range="custom" aria-pressed="false">기간 지정</button>' +
       '</div>' +
-      '<label class="rend" hidden><span>종료일</span>' +
+      '<div class="rfields" data-mode="day">' +
+      '<label class="rfld"><span class="rfld-k" data-role="start-k">날짜</span>' +
+      '<input class="inp" type="date" name="startDate" aria-label="시작일" value="' + date + '" min="1900-01-01" max="2099-12-31">' +
+      '</label>' +
+      '<label class="rfld rfld-end" hidden><span class="rfld-k">종료일</span>' +
       '<input class="inp" type="date" name="endDate" aria-label="종료일" value="" min="' + date + '" max="2099-12-31">' +
       '</label>' +
+      '</div>' +
+      '<p class="rsum" hidden></p>' +
       '</div>' +
       '<div class="add-sub">' +
       '<input class="inp" type="time" name="time" aria-label="시간">' +
       '<select class="inp" name="cat" aria-label="카테고리">' +
-      CAT_ORDER.map(function (c) {
-        return '<option value="' + c + '"' + (c === '가족' ? ' selected' : '') + '>' + c + '</option>';
+      catOrder().map(function (c) {
+        return '<option value="' + esc(c) + '"' + (c === selCat ? ' selected' : '') + '>' + esc(c) + '</option>';
       }).join('') +
+      '<option value="' + NEW_CAT + '">＋ 직접 입력…</option>' +
       '</select>' +
       '<button class="btn btn-primary" type="submit">추가</button>' +
-      '</div></form>';
+      '</div>' +
+      '<div class="catnew" hidden data-color="' + CAT_SWATCH[0].c + '">' +
+      '<input class="inp" name="newCat" placeholder="새 카테고리 이름 (예: 운동, 아이 학교)" aria-label="새 카테고리 이름" maxlength="10" autocomplete="off">' +
+      '<div class="catnew-sub">' +
+      '<span class="catnew-k">색</span>' +
+      '<div class="catsw" role="group" aria-label="카테고리 색">' +
+      CAT_SWATCH.map(function (sw, i) {
+        return '<button type="button" class="csw' + (i === 0 ? ' on' : '') + '" style="--c:' + sw.c + '" data-act="pick-cat-color" data-color="' + sw.c + '" aria-label="' + sw.k + '" aria-pressed="' + (i === 0 ? 'true' : 'false') + '"></button>';
+      }).join('') +
+      '</div>' +
+      '<span class="catnew-hint">한 번 만들면 다음에도 골라 쓸 수 있어요</span>' +
+      '</div>' +
+      '</div>' +
+      '</form>';
   }
 
   function upRow(e) {
@@ -1077,7 +1205,7 @@
     var n = dayDiff(effStart, t);
     var span = evSpans(e);
     var dd = (span && e.date < t) ? '진행중' : n === 0 ? '오늘' : n === 1 ? '내일' : 'D-' + n;
-    var cat = CATS[e.cat] || CATS['가족'];
+    var cat = catOf(e.cat);
     return '<li><button class="up" data-act="open-day" data-date="' + e.date + '">' +
       '<span class="d"><b>' + Number(e.date.slice(5, 7)) + '/' + Number(e.date.slice(8, 10)) + '</b>' + weekday(e.date) + '</span>' +
       '<span class="body"><p>' + esc(e.title) + '</p>' +
@@ -1259,7 +1387,7 @@
           if (evSpans(e)) return;          /* 기간 일정은 띠로 그리므로 점은 하루 일정만 */
           if (seen[e.cat]) return;
           seen[e.cat] = 1;
-          var cat = CATS[e.cat] || CATS['가족'];
+          var cat = catOf(e.cat);
           dots += '<i class="dot" style="--c:' + cat.c + '"></i>';
         });
 
@@ -1273,7 +1401,7 @@
               if (sg.lane === li && sg.sc <= ci && ci <= sg.ec) { hit = sg; break; }
             }
             if (!hit) { laneHtml += '<span class="hlsp"></span>'; continue; }
-            var hcat = CATS[hit.e.cat] || CATS['가족'];
+            var hcat = catOf(hit.e.cat);
             var hcls = 'hl' + (hit.sc === ci ? ' s' : ' bl') + (hit.ec === ci ? ' e' : ' br');
             var label = hit.sc === ci ? hit.e.title : '';
             laneHtml += '<span class="' + hcls + '" style="--c:' + hcat.c + '"' +
@@ -1319,8 +1447,8 @@
           '</div>' +
           '<div class="dow">' + WD.map(function (w) { return '<span>' + w + '</span>'; }).join('') + '</div>' +
           '<div class="cal">' + calHtml + '</div>' +
-          '<div class="legend">' + CAT_ORDER.map(function (c) {
-            return '<span><i style="--c:' + CATS[c].c + '"></i>' + c + '</span>';
+          '<div class="legend">' + catOrder().map(function (c) {
+            return '<span><i style="--c:' + catOf(c).c + '"></i>' + c + '</span>';
           }).join('') + '</div>' +
         '</div>' +
         '<div class="card day-panel">' +
@@ -1644,31 +1772,24 @@
       return;
     }
 
-    if (act === 'range-chip') {
+    if (act === 'pick-cat-color') {
       e.preventDefault();
-      var rf = el.closest('form');
-      if (!rf) return;
-      var mode = el.getAttribute('data-range');
-      var rstart = rf.getAttribute('data-date') || todayStr();
-      rf.setAttribute('data-range', mode);
-      $$('.rchip', rf).forEach(function (b) {
+      var cbox = el.closest('.catnew');
+      if (!cbox) return;
+      cbox.setAttribute('data-color', el.getAttribute('data-color') || CAT_SWATCH[0].c);
+      $$('.csw', cbox).forEach(function (b) {
         var on = b === el;
         b.classList.toggle('on', on);
         b.setAttribute('aria-pressed', on ? 'true' : 'false');
       });
-      var rend = rf.querySelector('.rend');
-      var einp = rf.querySelector('input[name=endDate]');
-      if (!rend || !einp) return;
-      if (mode === 'day') {
-        rend.hidden = true;
-        einp.value = rstart;
-      } else if (mode === 'week') {
-        einp.value = addDays(rstart, 6);
-        rend.hidden = false;
-      } else {
-        if (!einp.value || einp.value <= rstart) einp.value = addDays(rstart, 1);
-        rend.hidden = false;
-      }
+      return;
+    }
+
+    if (act === 'range-chip') {
+      e.preventDefault();
+      var rf = el.closest('form');
+      if (!rf) return;
+      setRangeMode(rf, el.getAttribute('data-range') || 'day');
       return;
     }
 
@@ -1855,16 +1976,25 @@
     if (kind === 'event') {
       var title = String(f.elements.title.value || '').trim();
       if (!title) return;
-      var startD = f.getAttribute('data-date') || todayStr();
       var mode = f.getAttribute('data-range') || 'day';
+      var startEl = f.querySelector('input[name=startDate]');
+      var startD = (startEl && startEl.value) ? startEl.value : (f.getAttribute('data-date') || todayStr());
       var endD = '';
-      var rendEl = f.querySelector('.rend');
       var endEl = f.querySelector('input[name=endDate]');
-      if (mode !== 'day' && rendEl && !rendEl.hidden && endEl && endEl.value) endD = endEl.value;
-      if (endD && endD <= startD) endD = '';
+      if (mode !== 'day' && endEl && endEl.value) endD = endEl.value;
+      if (endD && endD < startD) {
+        toast('종료일이 시작일보다 빨라요');
+        if (endEl) endEl.focus();
+        rangeSummary(f);
+        return;
+      }
+      if (endD === startD) endD = '';
+      var catName = resolveCat(f);
+      if (!catName) return;
+      lastCat = catName;
       var item = {
         id: uid(), date: startD, endDate: endD, time: f.elements.time.value || '',
-        title: title, cat: f.elements.cat.value || '가족', done: false
+        title: title, cat: catName, done: false
       };
       state.events.push(item);
       save(); render();
@@ -1963,10 +2093,70 @@
     }
   });
 
+  /* 기간 입력 — 시작일을 바꾸면 종료일 최소값을 따라가게 */
+  function syncRangeInput(e) {
+    var t = e.target;
+    if (!t || !t.matches || !t.matches('input[name=startDate], input[name=endDate]')) return;
+    var rf = t.closest('form[data-form=event]');
+    if (!rf) return;
+    var p = rangeParts(rf);
+    if (!p.startEl || !p.endEl) return;
+    var mode = rf.getAttribute('data-range') || 'day';
+    var s = p.startEl.value, en = p.endEl.value;
+    if (!s || mode !== 'custom') return;
+    if (t.name === 'startDate') {
+      if (en && en < s) p.endEl.value = addDays(s, 1);
+    } else if (en && en < s) {
+      p.endEl.value = s;
+    }
+    p.endEl.setAttribute('min', s);
+    rangeSummary(rf);
+  }
+  document.addEventListener('input', syncRangeInput);
+  document.addEventListener('change', syncRangeInput);
+
+  /* 카테고리 select — '＋ 직접 입력…' 이면 이름·색 입력줄을 열고, 저장 때 새 카테고리로 등록 */
+  function resolveCat(f) {
+    var sel = f.elements.cat;
+    var val = sel ? String(sel.value || '') : '';
+    if (val !== NEW_CAT) return (CATS[val] || customCats()[val]) ? val : '가족';
+    var box = f.querySelector('.catnew');
+    var inp = box ? box.querySelector('input[name=newCat]') : null;
+    var nm = String(inp && inp.value || '').trim().replace(/\s+/g, ' ').slice(0, 10);
+    if (!nm) {
+      toast('새 카테고리 이름을 먼저 적어 주세요');
+      if (inp) inp.focus();
+      return '';
+    }
+    if (CATS[nm] || nm === NEW_CAT) return CATS[nm] ? nm : '가족';
+    var col = (box && box.getAttribute('data-color')) || CAT_SWATCH[0].c;
+    state.cats = customCats();
+    if (!state.cats[nm]) state.cats[nm] = { c: col, e: '🏷️' };
+    return nm;
+  }
+
+  function syncCatSelect(e) {
+    var t = e.target;
+    if (!t || !t.matches || !t.matches('select[name=cat]')) return;
+    var f = t.closest('form[data-form=event]');
+    if (!f) return;
+    var box = f.querySelector('.catnew');
+    if (!box) return;
+    var on = t.value === NEW_CAT;
+    box.hidden = !on;
+    if (on) {
+      var inp = box.querySelector('input[name=newCat]');
+      if (inp) {
+        if (inp.scrollIntoView) inp.scrollIntoView({ block: 'nearest' });
+        inp.focus();
+      }
+    }
+  }
+  document.addEventListener('change', syncCatSelect);
+
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') closeSheet();
   });
-
   var fileInput = $('#importFile');
   if (fileInput) {
     fileInput.addEventListener('change', function () {
