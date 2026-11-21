@@ -102,12 +102,14 @@
     grid-template-areas:
       "hero weather"
       "affirm affirm"
-      "routine side";
+      "routine side"
+      "calendar calendar";
     align-items:start;
   }
   .card{
     background:#fff;border-radius:var(--radius);
     padding:clamp(14px,1.4vw,20px);
+    min-width:0;
     box-shadow:0 6px 0 rgba(43,43,58,.05), 0 22px 44px -30px rgba(43,43,58,.55);
   }
   .sec-head{display:flex;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
@@ -199,33 +201,31 @@
 
   /* ---------- routine ---------- */
   .routine{grid-area:routine;}
-  .todos{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;}
+  .todos{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
   .todo{
-    position:relative;display:flex;align-items:center;gap:12px;
-    min-height:92px;padding:13px 14px;border-radius:22px;
+    position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:8px;
+    padding:14px 10px 15px;border-radius:26px;
     border:3px solid #EDF1F8;background:#FBFCFE;
-    font-family:inherit;text-align:left;cursor:pointer;
-    font-weight:900;font-size:clamp(14px,1.35vw,18px);letter-spacing:-.4px;color:#2b2b3a;
+    font-family:inherit;text-align:center;cursor:pointer;
+    font-weight:900;font-size:clamp(14px,1.35vw,19px);letter-spacing:-.5px;color:#2b2b3a;
     transition:transform .12s, background .2s, border-color .2s, box-shadow .2s;
-    line-height:1.28;
+    line-height:1.25;
   }
   .todo:active{transform:scale(.975);}
-  .todo .em{
-    width:clamp(44px,4.4vw,58px);height:clamp(44px,4.4vw,58px);
-    flex:0 0 auto;display:grid;place-items:center;
-  }
-  .todo .em svg{width:100%;height:100%;}
-  .todo .txt{flex:1 1 auto;}
+  .todo .art{width:100%;display:grid;place-items:center;flex:1 1 auto;min-height:0;}
+  .todo .art svg{width:100%;height:auto;max-height:172px;filter:drop-shadow(0 6px 10px rgba(43,43,58,.13));}
+  .todo .txt{flex:0 0 auto;display:flex;align-items:center;justify-content:center;min-height:2.5em;padding:0 2px;word-break:keep-all;overflow-wrap:break-word;}
   .todo .tick{
-    width:34px;height:34px;border-radius:50%;flex:0 0 auto;
-    border:3px solid #DCE3EE;display:grid;place-items:center;
-    color:transparent;font-size:17px;font-weight:900;
+    position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:50%;
+    border:3px solid #DCE3EE;background:rgba(255,255,255,.8);display:grid;place-items:center;
+    color:transparent;font-size:18px;font-weight:900;
     transition:background .2s,border-color .2s,color .2s;
   }
   .todo.done{background:linear-gradient(135deg,#EAFBF1,#D8F5E4);border-color:#A9E6C1;}
   .todo.done .tick{background:var(--good);border-color:var(--good);color:#fff;}
   .todo.done .txt{color:#5f9c7c;text-decoration:line-through;text-decoration-thickness:2px;text-decoration-color:rgba(95,156,124,.55);}
   .todo.done .em svg{opacity:.9;}
+  .todo.done .art svg{opacity:.92;}
   .todo .burst{
     position:absolute;inset:0;pointer-events:none;display:grid;place-items:center;
     font-size:30px;opacity:0;
@@ -429,17 +429,219 @@
   .btn.danger{background:#EF5350;box-shadow:0 5px 0 #c33a37;margin-left:8px;}
   .btn-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
 
+  /* ---------- 아침 / 저녁 모드 전환 ---------- */
+  .mode-switch{
+    display:inline-flex;align-items:center;gap:4px;
+    background:#fff;border-radius:999px;padding:5px;
+    box-shadow:0 5px 0 rgba(43,43,58,.12);
+  }
+  .mode-switch button{
+    font-family:inherit;font-weight:900;cursor:pointer;border:none;
+    background:transparent;border-radius:999px;padding:9px 16px;
+    font-size:clamp(14px,1.35vw,18px);letter-spacing:-.4px;color:#8894ab;
+    display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
+    transition:transform .12s,background .2s,color .2s;
+  }
+  .mode-switch button:active{transform:scale(.95);}
+  .mode-switch button.on[data-mode="morning"]{background:linear-gradient(135deg,#FFE680,#F7C948);color:#6b4a00;box-shadow:0 3px 0 #d9a72c;}
+  .mode-switch button.on[data-mode="evening"]{background:linear-gradient(135deg,#8B7BFF,#B9A6FF);color:#1a1740;box-shadow:0 3px 0 #5a4bd6;}
+  .mode-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+  .mode-tabs button{
+    font-family:inherit;font-weight:900;cursor:pointer;border:3px solid #E7ECF5;
+    background:#FBFCFE;border-radius:16px;padding:11px 8px;font-size:15px;color:#7b8499;
+    transition:transform .12s,border-color .2s,background .2s,color .2s;
+  }
+  .mode-tabs button:active{transform:scale(.97);}
+  .mode-tabs button.on[data-rmode="morning"]{border-color:#F7C948;background:#FFF7DC;color:#6b4a00;}
+  .mode-tabs button.on[data-rmode="evening"]{border-color:#8B7BFF;background:#F1EEFF;color:#3a2f8f;}
+
+  /* ---------- 🌙 저녁 모드 테마 (밤하늘 네이비·퍼플) ---------- */
+  body[data-mode="evening"]{
+    --ink:#eef1ff; --muted:#a3acd6; --line:#333a68;
+    --good:#5fd39a; --warn:#ffb765; --bad:#ff8d84;
+    --blue:#8f9cff; --accent:#a78bfa; --accent-soft:#2f3566; --accent-deep:#d3c7ff;
+    background:
+      radial-gradient(1100px 620px at 84% -12%, rgba(122,92,255,.40) 0%, rgba(122,92,255,0) 62%),
+      radial-gradient(900px 520px at 0% 104%, rgba(58,120,200,.28) 0%, rgba(58,120,200,0) 58%),
+      linear-gradient(180deg,#151834 0%,#1b1f42 42%,#101227 100%);
+    color:var(--ink);
+  }
+  body[data-mode="evening"] .bg svg{opacity:.06;}
+  body[data-mode="evening"] .bg::before{
+    content:"🌙";position:absolute;right:4%;top:2%;font-size:clamp(48px,6vw,78px);
+    opacity:.26;filter:drop-shadow(0 0 26px rgba(255,222,150,.55));
+  }
+  body[data-mode="evening"] .bg::after{
+    content:"";position:absolute;inset:0;opacity:.75;
+    background-image:
+      radial-gradient(2px 2px at 8% 12%, rgba(255,255,255,.9), transparent 62%),
+      radial-gradient(1.6px 1.6px at 22% 34%, rgba(255,255,255,.75), transparent 62%),
+      radial-gradient(2px 2px at 37% 8%, rgba(255,255,255,.85), transparent 62%),
+      radial-gradient(1.4px 1.4px at 51% 26%, rgba(255,255,255,.7), transparent 62%),
+      radial-gradient(2.2px 2.2px at 66% 14%, rgba(255,255,255,.9), transparent 62%),
+      radial-gradient(1.6px 1.6px at 78% 33%, rgba(255,255,255,.75), transparent 62%),
+      radial-gradient(2px 2px at 91% 19%, rgba(255,255,255,.85), transparent 62%),
+      radial-gradient(1.5px 1.5px at 15% 58%, rgba(255,255,255,.6), transparent 62%),
+      radial-gradient(1.8px 1.8px at 44% 71%, rgba(255,255,255,.55), transparent 62%),
+      radial-gradient(1.4px 1.4px at 72% 63%, rgba(255,255,255,.6), transparent 62%),
+      radial-gradient(1.8px 1.8px at 33% 88%, rgba(255,255,255,.5), transparent 62%),
+      radial-gradient(2px 2px at 88% 82%, rgba(255,255,255,.6), transparent 62%);
+  }
+  body[data-mode="evening"] .brand{color:#f3f5ff;}
+  body[data-mode="evening"] .head-date{background:#2a2f5c;color:#c3cbf2;box-shadow:0 3px 0 rgba(0,0,0,.32);}
+  body[data-mode="evening"] .mode-switch{background:#262b54;box-shadow:0 5px 0 rgba(0,0,0,.38);}
+  body[data-mode="evening"] .mode-switch button{color:#a9b2de;}
+  body[data-mode="evening"] .icon-btn{background:#2a2f5c;color:#eef1ff;box-shadow:0 5px 0 rgba(0,0,0,.38);}
+  body[data-mode="evening"] .card{
+    background:linear-gradient(160deg,#242a52 0%,#1c2043 100%);
+    border:1px solid #333a68;
+    box-shadow:0 6px 0 rgba(0,0,0,.28), 0 26px 50px -32px rgba(0,0,0,.95);
+    color:var(--ink);
+  }
+  body[data-mode="evening"] .hero{background:linear-gradient(160deg,#2a2f60 0%,#1e2246 100%);}
+  body[data-mode="evening"] .weather{background:linear-gradient(160deg,#20264e 0%,#1a1e3f 100%);}
+  body[data-mode="evening"] .after{background:linear-gradient(160deg,#20264e 0%,#1a1e3f 100%);}
+  body[data-mode="evening"] .rewards{background:linear-gradient(160deg,#2a2750 0%,#1c1f43 100%);}
+  body[data-mode="evening"] .affirm{background:linear-gradient(115deg,#3a3161 0%,#2c2a5e 52%,#22305a 100%);border:3px solid #4a4585;}
+  body[data-mode="evening"] .affirm-label{color:#ffd479;}
+  body[data-mode="evening"] .affirm p{color:#f5f2ff;}
+  body[data-mode="evening"] .clock{color:#f4f6ff;text-shadow:0 2px 16px rgba(140,120,255,.35);}
+  body[data-mode="evening"] .clock .ampm{color:#d8ccff;background:#353a72;}
+  body[data-mode="evening"] .clock .ss{color:#8189b9;}
+  body[data-mode="evening"] .count{color:#79e6b3;}
+  body[data-mode="evening"] .count.warn{color:#ffb765;}
+  body[data-mode="evening"] .count.ready{color:#bcc6ff;}
+  body[data-mode="evening"] .track{background:#171b38;border-color:#333a68;}
+  body[data-mode="evening"] .fill{background:linear-gradient(90deg,#6fd6ff,#a78bfa);}
+  body[data-mode="evening"] .fill.warn{background:linear-gradient(90deg,#ffd24a,#ff8a3d);}
+  body[data-mode="evening"] .fill.ready{background:linear-gradient(90deg,#b9a6ff,#6f7bff);}
+  body[data-mode="evening"] .hero-foot{color:#9aa3cf;}
+  body[data-mode="evening"] .sec-head .sub{color:#9da6d2;}
+  body[data-mode="evening"] .wx-desc{color:#cfd6ff;}
+  body[data-mode="evening"] .wx-range{color:#a3acd6;}
+  body[data-mode="evening"] .wx-foot{color:#8891bd;}
+  body[data-mode="evening"] .chip{background:#2c3260;color:#c8d0f5;}
+  body[data-mode="evening"] .chip.g-good{background:#1e4438;color:#8fe6b9;}
+  body[data-mode="evening"] .chip.g-normal{background:#233a63;color:#a8c9ff;}
+  body[data-mode="evening"] .chip.g-bad{background:#4a3318;color:#ffc894;}
+  body[data-mode="evening"] .chip.g-worst{background:#4a2224;color:#ffb0aa;}
+  body[data-mode="evening"] .hint-pill{background:#3a3363;border-color:#5a4f96;color:#ffe1a0;}
+  body[data-mode="evening"] .todo{background:#232850;border-color:#343b6e;color:#eef1ff;}
+  body[data-mode="evening"] .todo .tick{border-color:#474f8c;background:rgba(30,34,66,.75);}
+  body[data-mode="evening"] .todo .art svg{filter:drop-shadow(0 6px 12px rgba(0,0,0,.45));}
+  body[data-mode="evening"] .todo.done{background:linear-gradient(135deg,#1d4438,#214c3e);border-color:#3d8f6e;}
+  body[data-mode="evening"] .todo.done .txt{color:#8fd9b4;text-decoration-thickness:2px;text-decoration-color:rgba(143,217,180,.5);}
+  body[data-mode="evening"] .todo.done .tick{background:#4fbf8b;border-color:#4fbf8b;color:#10241c;}
+  body[data-mode="evening"] .aitem{background:#232850;border-color:#343b6e;color:#eef1ff;}
+  body[data-mode="evening"] .aitem .box{border-color:#474f8c;}
+  body[data-mode="evening"] .aitem.done{background:linear-gradient(135deg,#1d4438,#214c3e);border-color:#3d8f6e;}
+  body[data-mode="evening"] .aitem.done .box{background:#4fbf8b;border-color:#4fbf8b;color:#10241c;}
+  body[data-mode="evening"] .aitem.done .atxt{color:#8fd9b4;text-decoration-thickness:2px;text-decoration-color:rgba(143,217,180,.5);}
+  body[data-mode="evening"] .after-note{color:#79e6b3;}
+  body[data-mode="evening"] .daytab{background:#262b54;color:#a9b2de;}
+  body[data-mode="evening"] .daytab.today:not(.on){background:#31386c;color:#c3caff;}
+  body[data-mode="evening"] .daytab.on{background:#7b6cf6;color:#fff;box-shadow:0 4px 0 #4b3fb0;}
+  body[data-mode="evening"] .slot{background:#20264c;border-color:#3a4276;}
+  body[data-mode="evening"] .slot.filled{background:#3b3368;border-color:#b9a6ff;box-shadow:0 4px 12px -4px rgba(150,120,255,.62);}
+  body[data-mode="evening"] .master{background:linear-gradient(135deg,#b9a6ff,#8b7bff);color:#1a1740;box-shadow:0 5px 0 #5a4bd6;}
+  body[data-mode="evening"] .empty{color:#98a1cd;}
+  body[data-mode="evening"] .page-foot{color:#8a93bf;}
+  body[data-mode="evening"] .sheet,
+  body[data-mode="evening"] .celeb-card{color:#2b2b3a;}
+
+  /* ---------- 🌱 월간 포켓몬 스티커판 ---------- */
+  .calendar{grid-area:calendar;background:linear-gradient(160deg,#FFFDF3,#FFFFFF 65%);}
+  .cal-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+  .cal-head h2{margin:0;font-size:clamp(16px,1.6vw,22px);font-weight:900;letter-spacing:-.7px;}
+  .cal-nav{display:flex;align-items:center;gap:8px;margin-left:auto;}
+  .cal-nav button{
+    font-family:inherit;font-weight:900;cursor:pointer;border:none;
+    background:#EFF3FA;color:#4a5870;border-radius:14px;
+    min-width:46px;height:46px;font-size:19px;
+    box-shadow:0 4px 0 #dde5f1;transition:transform .12s;
+  }
+  .cal-nav button:active{transform:translateY(2px);box-shadow:0 2px 0 #dde5f1;}
+  .cal-title{font-weight:900;font-size:clamp(15px,1.5vw,20px);letter-spacing:-.5px;min-width:126px;text-align:center;font-variant-numeric:tabular-nums;}
+  .cal-sum{font-weight:900;font-size:clamp(12px,1.15vw,15px);color:var(--accent-deep);background:var(--accent-soft);border-radius:999px;padding:7px 14px;}
+  .cal-dows{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px;}
+  .cal-dow{text-align:center;font-weight:900;font-size:clamp(11px,1.05vw,14px);color:#93a0b8;}
+  .cal-dow.sun{color:#e0603a;}
+  .cal-dow.sat{color:#3B8FD6;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .cal-body{display:grid;grid-template-columns:minmax(0,780px) minmax(210px,1fr);gap:clamp(14px,2vw,30px);align-items:start;}
+  .cal-main{min-width:0;}
+  .cal-side{display:flex;flex-direction:column;gap:9px;}
+  .cal-stat{
+    display:flex;align-items:center;gap:10px;
+    background:#F8FAFF;border:2px solid #E7ECF5;border-radius:16px;
+    padding:11px 15px;font-weight:900;font-size:clamp(13px,1.2vw,16px);color:#4a5870;
+  }
+  .cal-stat .em2{font-size:1.25em;line-height:1;}
+  .cal-stat .n{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--accent-deep);font-size:1.1em;}
+  .cal-cell{
+    position:relative;height:clamp(48px,4.3vw,70px);border-radius:14px;
+    background:#FBFCFE;border:3px solid #EDF1F8;
+    display:flex;align-items:center;justify-content:center;padding:3px;
+    font-weight:900;font-size:clamp(12px,1.2vw,16px);color:#8b96ad;
+    font-variant-numeric:tabular-nums;
+  }
+  .cal-cell.blank{background:transparent;border:none;}
+  .cal-cell.today{border-color:var(--accent);background:#FFF9E6;color:var(--accent-deep);box-shadow:0 0 0 2px rgba(245,179,1,.28) inset;}
+  .cal-cell.has{color:#4a5870;background:#F4F8FF;border-color:#DDE6F5;}
+  .cal-cell .cal-num{position:absolute;top:3px;left:8px;font-size:clamp(11px,1.05vw,14px);font-weight:900;color:#7b8499;}
+  .cal-cell.today .cal-num{color:var(--accent-deep);}
+  .cal-cell.has .cal-num{color:#4a5870;}
+  .cal-cell .cal-mark{font-size:clamp(16px,1.9vw,24px);line-height:1;margin-top:4px;}
+  .cal-cell .cal-poke{width:clamp(22px,2.9vw,38px);height:clamp(22px,2.9vw,38px);display:block;}
+  .cal-cell .cal-poke svg{width:100%;height:100%;}
+  .cal-cell.full{
+    background:linear-gradient(140deg,#FFF6D2,#FFE9A8);border-color:#FFD84D;
+    box-shadow:0 4px 12px -6px rgba(214,164,0,.65);
+    animation:popIn .45s cubic-bezier(.2,1.6,.45,1);
+  }
+  .cal-cell.full::after{
+    content:"✨";position:absolute;top:-7px;right:-4px;font-size:clamp(12px,1.4vw,18px);
+  }
+  .cal-foot{margin-top:10px;font-size:clamp(11px,1.05vw,13px);font-weight:800;color:#a3adc0;line-height:1.6;}
+  .cal-foot b{color:#7b8499;}
+  body[data-mode="evening"] .calendar{background:linear-gradient(160deg,#26264e 0%,#1c1f43 100%);}
+  body[data-mode="evening"] .cal-nav button{background:#2c3260;color:#c8d0f5;box-shadow:0 4px 0 rgba(0,0,0,.4);}
+  body[data-mode="evening"] .cal-nav button:active{box-shadow:0 2px 0 rgba(0,0,0,.4);}
+  body[data-mode="evening"] .cal-sum{background:#353a72;color:#e3d9ff;}
+  body[data-mode="evening"] .cal-dow{color:#8f99c6;}
+  body[data-mode="evening"] .cal-cell{background:#20264c;border-color:#323a6e;color:#8b96bd;}
+  body[data-mode="evening"] .cal-cell .cal-num{color:#a3acd6;}
+  body[data-mode="evening"] .cal-cell.has{background:#252c58;border-color:#3b4478;color:#cfd6ff;}
+  body[data-mode="evening"] .cal-cell.has .cal-num{color:#cfd6ff;}
+  body[data-mode="evening"] .cal-cell.today{border-color:#b9a6ff;background:#2b2a56;color:#e3d9ff;box-shadow:0 0 0 2px rgba(150,120,255,.35) inset;}
+  body[data-mode="evening"] .cal-cell.today .cal-num{color:#e3d9ff;}
+  body[data-mode="evening"] .cal-cell.full{background:linear-gradient(140deg,#4a3f7e,#3a3368);border-color:#b9a6ff;box-shadow:0 4px 14px -6px rgba(150,120,255,.75);}
+  body[data-mode="evening"] .cal-stat{background:#232850;border-color:#343b6e;color:#cfd6ff;}
+  body[data-mode="evening"] .cal-stat .n{color:#e3d9ff;}
+  body[data-mode="evening"] .cal-foot{color:#8891bd;}
+  body[data-mode="evening"] .cal-foot b{color:#a6aedd;}
+
+  @media (max-width:1180px){
+    main{
+      grid-template-columns:1fr;
+      grid-template-areas:"hero" "weather" "affirm" "routine" "side" "calendar";
+    }
+    .cal-body{grid-template-columns:1fr;}
+    .todos{grid-template-columns:repeat(5,1fr);}
+  }
   @media (max-width:980px){
     main{
       grid-template-columns:1fr;
-      grid-template-areas:"hero" "weather" "affirm" "routine" "side";
+      grid-template-areas:"hero" "weather" "affirm" "routine" "side" "calendar";
     }
+    .cal-body{grid-template-columns:1fr;}
     .affirm p{font-size:clamp(16px,4vw,22px);}
-    .todos{grid-template-columns:repeat(2,1fr);}
+    .todos{grid-template-columns:repeat(3,1fr);}
   }
   @media (max-width:560px){
     .after-items{grid-template-columns:1fr;}
-    .todos{grid-template-columns:1fr;}
+    .todos{grid-template-columns:repeat(2,1fr);gap:10px;}
+    .todo .art svg{max-height:132px;}
     .clock{letter-spacing:-3px;}
   }
   @media (prefers-reduced-motion:reduce){
@@ -517,6 +719,99 @@
     <circle cx="60" cy="54" r="4.6" fill="#3a2208"/>
     <ellipse cx="50" cy="63" rx="4" ry="3" fill="#3a2208"/>
     <path d="M44 70 q6 5 12 0" fill="none" stroke="#3a2208" stroke-width="3" stroke-linecap="round"/>
+  </symbol>
+
+  <!-- routine scene art (big cards) -->
+  <symbol id="i-sc-eat" viewBox="0 0 120 120">
+    <use href="#i-charmander" x="24" y="4" width="72" height="72"/>
+    <path d="M30 92 h60 c0 13 -13 21 -30 21 s-30 -8 -30 -21 z" fill="#E7EEF9" stroke="#5b6478" stroke-width="3.2" stroke-linejoin="round"/>
+    <ellipse cx="60" cy="91" rx="25" ry="7" fill="#FFFDF4" stroke="#5b6478" stroke-width="3.2"/>
+    <path d="M48 80 q4 -7 0 -12 M60 78 q4 -8 0 -13 M72 80 q4 -7 0 -12" fill="none" stroke="#C9D6EE" stroke-width="3" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="i-sc-teeth" viewBox="0 0 120 120">
+    <use href="#i-pikachu" x="16" y="6" width="74" height="74"/>
+    <g transform="rotate(-18 80 90)">
+      <rect x="50" y="86" width="42" height="8" rx="4" fill="#5AC8F5" stroke="#2a6f9e" stroke-width="2.4"/>
+      <rect x="88" y="82" width="13" height="16" rx="3" fill="#ffffff" stroke="#9fb4c9" stroke-width="2.4"/>
+      <path d="M91 82 v16 M95 82 v16 M99 82 v16" stroke="#cfe0ee" stroke-width="1.6"/>
+    </g>
+    <path d="M24 44 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z" fill="#FFD74A"/>
+    <path d="M100 20 l2.4 5.6 5.6 2.4 -5.6 2.4 -2.4 5.6 -2.4 -5.6 -5.6 -2.4 5.6 -2.4z" fill="#B9A6FF"/>
+  </symbol>
+
+  <symbol id="i-sc-bath" viewBox="0 0 120 120">
+    <use href="#i-squirtle" x="20" y="4" width="68" height="68"/>
+    <path d="M14 90 h92 a7 7 0 0 1 -7 20 h-78 a7 7 0 0 1 -7 -20z" fill="#BFE4FF" stroke="#2a6f9e" stroke-width="3.2" stroke-linejoin="round"/>
+    <circle cx="34" cy="80" r="7" fill="#ffffff" stroke="#8fc2e6" stroke-width="2"/>
+    <circle cx="48" cy="74" r="5" fill="#ffffff" stroke="#8fc2e6" stroke-width="2"/>
+    <circle cx="84" cy="78" r="6" fill="#ffffff" stroke="#8fc2e6" stroke-width="2"/>
+    <path d="M98 14 v10 M90 8 v7 M106 8 v7" stroke="#8fc2e6" stroke-width="4" stroke-linecap="round"/>
+    <g fill="#9AD9F5"><circle cx="90" cy="32" r="4"/><circle cx="102" cy="38" r="3.2"/><circle cx="95" cy="47" r="2.8"/></g>
+  </symbol>
+
+  <symbol id="i-sc-dress" viewBox="0 0 120 120">
+    <use href="#i-eevee" x="10" y="2" width="70" height="70"/>
+    <path d="M80 68 l-12 8 6 10 6 -4 v26 h28 v-26 l6 4 6 -10 -12 -8 -6 6 -6 -6z" fill="#FF9FBC" stroke="#a63e63" stroke-width="3.2" stroke-linejoin="round"/>
+  </symbol>
+
+  <symbol id="i-sc-book" viewBox="0 0 120 120">
+    <use href="#i-eevee" x="22" y="0" width="72" height="72"/>
+    <path d="M60 84 l-32 -6 v22 l32 6z" fill="#FFFDF4" stroke="#8a6100" stroke-width="3.2" stroke-linejoin="round"/>
+    <path d="M60 84 l32 -6 v22 l-32 6z" fill="#FFF6E0" stroke="#8a6100" stroke-width="3.2" stroke-linejoin="round"/>
+    <path d="M36 86 v16 M46 87 v16 M74 87 v16 M84 86 v16" stroke="#E6D3A8" stroke-width="2.4" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="i-sc-tidy" viewBox="0 0 120 120">
+    <use href="#i-bulbasaur" x="22" y="0" width="70" height="70"/>
+    <rect x="26" y="86" width="70" height="24" rx="7" fill="#F6D08A" stroke="#8a6100" stroke-width="3.2"/>
+    <rect x="32" y="74" width="20" height="16" rx="3" fill="#8FD3F4" stroke="#2a6f9e" stroke-width="2.4"/>
+    <rect x="58" y="70" width="16" height="20" rx="3" fill="#FF9FBC" stroke="#a63e63" stroke-width="2.4"/>
+  </symbol>
+
+  <symbol id="i-sc-bag" viewBox="0 0 120 120">
+    <use href="#i-bulbasaur" x="14" y="2" width="68" height="68"/>
+    <path d="M70 76 v-8 a7 7 0 0 1 14 0 v8" fill="none" stroke="#2f5016" stroke-width="3.2"/>
+    <rect x="56" y="76" width="48" height="36" rx="10" fill="#7BC96F" stroke="#2f5016" stroke-width="3.2"/>
+    <path d="M56 89 h48" stroke="#2f5016" stroke-width="3.2"/>
+    <rect x="74" y="84" width="12" height="10" rx="2" fill="#F6D08A" stroke="#2f5016" stroke-width="2.4"/>
+  </symbol>
+
+  <symbol id="i-sc-shoes" viewBox="0 0 120 120">
+    <use href="#i-pikachu" x="28" y="0" width="66" height="66"/>
+    <path d="M22 106 q0 -18 18 -18 h8 q8 0 14 8 l14 5 q6 3 6 9 h-60z" fill="#EE1515" stroke="#7a1010" stroke-width="3.2" stroke-linejoin="round"/>
+    <path d="M34 96 h10 M40 88 h10" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+    <path d="M88 96 q10 -4 14 2" stroke="#7a1010" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="i-sc-wake" viewBox="0 0 120 120">
+    <circle cx="16" cy="18" r="10" fill="#FFCB05"/>
+    <g stroke="#FFB300" stroke-width="3.2" stroke-linecap="round">
+      <path d="M16 2 v5 M16 29 v5 M0 18 h5 M27 18 h5 M4 6 l4 4 M24 26 l4 4 M28 6 l-4 4 M8 26 l-4 4"/>
+    </g>
+    <use href="#i-pikachu" x="34" y="4" width="64" height="64"/>
+    <rect x="8" y="88" width="104" height="16" rx="8" fill="#BFE4FF" stroke="#2a6f9e" stroke-width="3.2"/>
+    <rect x="12" y="77" width="32" height="15" rx="6" fill="#ffffff" stroke="#9fb4c9" stroke-width="3.2"/>
+    <path d="M52 88 h60 v16 h-60z" fill="#FF9FBC" stroke="#a63e63" stroke-width="3.2" stroke-linejoin="round"/>
+  </symbol>
+
+  <symbol id="i-sc-wash" viewBox="0 0 120 120">
+    <use href="#i-squirtle" x="14" y="2" width="70" height="70"/>
+    <path d="M20 92 h80 v8 a10 10 0 0 1 -10 10 h-60 a10 10 0 0 1 -10 -10z" fill="#DDEBF7" stroke="#2a6f9e" stroke-width="3.2" stroke-linejoin="round"/>
+    <path d="M100 88 v-16 h-16" fill="none" stroke="#9fb4c9" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <g fill="#9AD9F5"><circle cx="86" cy="84" r="4"/><circle cx="86" cy="93" r="3.2"/><circle cx="79" cy="89" r="3"/></g>
+  </symbol>
+
+  <symbol id="i-sc-water" viewBox="0 0 120 120">
+    <use href="#i-pikachu" x="24" y="0" width="66" height="66"/>
+    <path d="M42 78 h36 l-5 34 h-26z" fill="#DDF1FF" stroke="#2a6f9e" stroke-width="3.2" stroke-linejoin="round"/>
+    <path d="M45 92 h30" stroke="#8fc2e6" stroke-width="3"/>
+  </symbol>
+
+  <symbol id="i-sc-star" viewBox="0 0 120 120">
+    <use href="#i-pokeball" x="24" y="18" width="72" height="72"/>
+    <path d="M18 30 l3.4 7.6 7.6 3.4 -7.6 3.4 -3.4 7.6 -3.4 -7.6 -7.6 -3.4 7.6 -3.4z" fill="#FFD74A"/>
+    <path d="M100 34 l3 6.8 6.8 3 -6.8 3 -3 6.8 -3 -6.8 -6.8 -3 6.8 -3z" fill="#B9A6FF"/>
   </symbol>
 
   <!-- weather -->
@@ -602,10 +897,14 @@
   <header>
     <div class="brand">
       <span class="ico"><svg viewBox="0 0 100 100"><use href="#i-pokeball"/></svg></span>
-      <span>아침 루틴 대시보드</span>
+      <span id="brandText">아침 루틴 대시보드</span>
     </div>
     <div class="head-date" id="dateLine">불러오는 중…</div>
     <div class="spacer"></div>
+    <div class="mode-switch" role="group" aria-label="아침·저녁 모드 전환">
+      <button type="button" id="btnModeMorning" data-mode="morning" aria-pressed="true">🌅 아침</button>
+      <button type="button" id="btnModeEvening" data-mode="evening" aria-pressed="false">🌙 저녁</button>
+    </div>
     <button class="badge gold" id="profileBadge" type="button" title="설정에서 아이를 바꿀 수 있어요">
       <span class="pname">골드</span><span class="role">첫째</span>
     </button>
@@ -647,17 +946,17 @@
 
     <!-- AFFIRMATION -->
     <section class="card affirm" aria-label="오늘의 한마디">
-      <span class="who"><svg viewBox="0 0 100 100"><use href="#i-pikachu"/></svg></span>
+      <span class="who"><svg id="affirmIcon" viewBox="0 0 100 100"><use href="#i-pikachu"/></svg></span>
       <div>
-        <div class="affirm-label">오늘의 한마디</div>
+        <div class="affirm-label" id="affirmLabel">오늘의 한마디</div>
         <p id="affirmText">오늘도 시작하는 너를 응원해!</p>
       </div>
     </section>
 
     <!-- ROUTINE -->
-    <section class="card routine" aria-label="아침 준비 루틴">
+    <section class="card routine" id="routineCard" aria-label="아침 준비 루틴">
       <div class="sec-head">
-        <h2>아침 준비 루틴</h2>
+        <h2 id="routineTitle">아침 준비 루틴</h2>
         <span class="sub" id="routineCount">0 / 0</span>
       </div>
       <div class="todos" id="routineList"></div>
@@ -687,6 +986,37 @@
         </div>
       </section>
     </div>
+
+    <!-- MONTHLY CALENDAR -->
+    <section class="card calendar" aria-label="이번 달 포켓몬 스티커판">
+      <div class="cal-head">
+        <h2>🌱 이번 달 포켓몬 스티커판</h2>
+        <span class="cal-sum" id="calSummary">이번 달 0개</span>
+        <div class="cal-nav">
+          <button type="button" id="btnCalPrev" aria-label="이전 달">◀</button>
+          <span class="cal-title" id="calTitle">-</span>
+          <button type="button" id="btnCalNext" aria-label="다음 달">▶</button>
+        </div>
+      </div>
+      <div class="cal-body">
+        <div class="cal-main">
+          <div class="cal-dows" aria-hidden="true">
+            <span class="cal-dow sun">일</span><span class="cal-dow">월</span><span class="cal-dow">화</span>
+            <span class="cal-dow">수</span><span class="cal-dow">목</span><span class="cal-dow">금</span>
+            <span class="cal-dow sat">토</span>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+        </div>
+        <aside class="cal-side" aria-label="이번 달 기록">
+          <div class="cal-stat"><span class="em2">🌅</span>아침만 끝낸 날<span class="n" id="calStatM">0</span></div>
+          <div class="cal-stat"><span class="em2">🌙</span>저녁만 끝낸 날<span class="n" id="calStatE">0</span></div>
+          <div class="cal-stat"><span class="em2">⭐</span>아침·저녁 모두<span class="n" id="calStatBoth">0</span></div>
+        </aside>
+      </div>
+      <div class="cal-foot">
+        🌅 아침만 끝내면 아침 표시, 🌙 저녁만 끝내면 저녁 표시 · <b>아침까지 저녁까지 둘 다 끝내면 포켓몬 스티커가 붙어요!</b>
+      </div>
+    </section>
   </main>
 
   <div class="page-foot">⚙️ 오른쪽 위 톱니바퀴에서 아이 · 시간 · 루틴을 바꿀 수 있어요</div>
@@ -728,6 +1058,15 @@
             <input type="time" id="inpDepart" step="60">
           </label>
         </div>
+        <div class="row" style="margin-top:12px;">
+          <label>저녁 시작
+            <input type="time" id="inpEveStart" step="60">
+          </label>
+          <label>잘 시간(취침)
+            <input type="time" id="inpBed" step="60">
+          </label>
+        </div>
+        <p class="hint" style="margin-top:10px;">오후 5시(17:00) 전에는 아침, 그 뒤에는 저녁 모드로 열려요. 위쪽 🌅/🌙 버튼으로 언제든 바꿀 수 있어요.</p>
       </section>
 
       <section class="set-block">
@@ -746,7 +1085,11 @@
       </section>
 
       <section class="set-block">
-        <h3>아침 준비 루틴 항목</h3>
+        <h3>루틴 항목</h3>
+        <div class="mode-tabs" id="routineModeTabs">
+          <button type="button" data-rmode="morning">🌅 아침 루틴</button>
+          <button type="button" data-rmode="evening">🌙 저녁 루틴</button>
+        </div>
         <p class="hint">아이에게 맞게 고쳐 주세요. 바꾼 내용은 바로 저장돼요.</p>
         <div id="routineEdit"></div>
         <button class="btn ghost" id="btnAddRoutine" type="button">+ 항목 추가</button>
@@ -797,6 +1140,7 @@
   var DAY_KEYS = ['mon','tue','wed','thu','fri','sat','sun'];
   var DAY_LABELS = ['월','화','수','목','금','토','일'];
   var STICKERS = ['pikachu','bulbasaur','charmander','squirtle','eevee','pokeball'];
+  var MODE_KEY = PREFIX + 'mode';
 
   var PROFILES = {
     gold:    { key:'gold',    name:'골드',   role:'첫째' },
@@ -838,6 +1182,25 @@
     '아침 해처럼 매일 새로 시작하는 너를 응원해.'
   ];
 
+  var EVENING_AFFIRMATIONS = [
+    '오늘 하루도 정말 잘 보냈어!',
+    '포근하게 자고 내일 또 신나게 놀자!',
+    '오늘 네가 해낸 일, 다 기억하고 있어. 멋졌어!',
+    '잘 자는 게 내일을 신나게 만드는 제일 좋은 준비야.',
+    '이불 속은 포근해. 오늘 걱정은 내일 아침에 다시 보자.',
+    '오늘 하루 수고했어. 네가 참 대견해.',
+    '내일 아침에 또 만나! 잘 자, 우리 보물.',
+    '조용한 밤이야. 눈 감고 하나, 둘, 셋 하고 자 볼까?',
+    '오늘도 씩씩하게 잘 해냈어! 이제 잘 시간이야 🌙',
+    '네가 웃는 꿈 꾸길 바랄게. 잘 자!',
+    '내일도 너에게 좋은 일이 있을 거야.',
+    '잘 자는 것도 대단한 일이야. 오늘은 푹 자자.',
+    '오늘 하루의 끝에서, 네가 참 고마워.',
+    '밤하늘 별이 너를 지켜 줄 거야. 편안히 자!',
+    '네가 오늘 한 일들이 모두 반짝반짝 빛나고 있어.',
+    '잘 자, 내일도 네 편이 되어 줄게.'
+  ];
+
   /* ================= defaults ================= */
   function uid(){ return 'x' + Math.random().toString(36).slice(2, 9); }
 
@@ -859,6 +1222,28 @@
       { id: uid(), text:'아침밥 든든히 먹기', icon:'charmander' },
       { id: uid(), text:'가방·물통 챙기기', icon:'bulbasaur' },
       { id: uid(), text:'신발 신고 출발 준비!', icon:'pokeball' }
+    ];
+  }
+
+  function defaultRoutineEve(profileKey){
+    if (profileKey === 'gold'){
+      return [
+        { id: uid(), text:'저녁 맛있게 먹기', icon:'charmander' },
+        { id: uid(), text:'장난감·책 정리하기', icon:'bulbasaur' },
+        { id: uid(), text:'따뜻하게 샤워하기', icon:'squirtle' },
+        { id: uid(), text:'치카치카 양치하기', icon:'pikachu' },
+        { id: uid(), text:'잠옷 갈아입기', icon:'eevee' },
+        { id: uid(), text:'그림책 1권 읽기', icon:'pokeball' },
+        { id: uid(), text:'내일 가방·옷 미리 챙기기', icon:'bulbasaur' }
+      ];
+    }
+    return [
+      { id: uid(), text:'저녁 맛있게 먹기', icon:'charmander' },
+      { id: uid(), text:'장난감 제자리에 넣기', icon:'bulbasaur' },
+      { id: uid(), text:'목욕·씻기', icon:'squirtle' },
+      { id: uid(), text:'치카치카 양치하기', icon:'pikachu' },
+      { id: uid(), text:'잠옷 갈아입기', icon:'eevee' },
+      { id: uid(), text:'그림책 보기', icon:'pokeball' }
     ];
   }
 
@@ -899,11 +1284,15 @@
       profile: profileKey,
       start: '07:30',
       depart: '08:05',
+      eveningStart: '19:30',
+      bed: '21:00',
       sound: true,
       wakeEnabled: false,
       routine: defaultRoutine(profileKey),
+      routineEve: defaultRoutineEve(profileKey),
       after: defaultAfter(profileKey),
       totalStickers: 0,
+      calendar: {},
       day: blankDay(todayStr())
     };
   }
@@ -915,7 +1304,11 @@
     return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
   }
   function blankDay(dateStr){
-    return { date: dateStr, done: {}, stamps: [], afterDone: {}, master: false };
+    return {
+      date: dateStr,
+      done: {}, stamps: [], afterDone: {}, master: false,
+      doneEve: {}, stampsEve: [], masterEve: false
+    };
   }
   function dayKeyOf(d){
     d = d || new Date();
@@ -935,6 +1328,34 @@
   }
   function icon(name, cls){
     return '<svg class="' + (cls || 'ic') + '" viewBox="0 0 100 100" aria-hidden="true"><use href="#i-' + name + '"/></svg>';
+  }
+
+  /* 행동에 맞는 큰 캐릭터 그림 고르기 */
+  var ART_RULES = [
+    ['teeth', ['양치','치카','이닦','이 닦']],
+    ['bath',  ['샤워','목욕','씻']],
+    ['wash',  ['세수','세면']],
+    ['wake',  ['이불','일어나','기상','침대']],
+    ['tidy',  ['정리','장난감','치우','넣기']],
+    ['eat',   ['먹','밥','식사','간식']],
+    ['bag',   ['가방','챙기','물통','준비물']],
+    ['shoes', ['신발','출발','나가']],
+    ['dress', ['옷','갈아입']],
+    ['book',  ['책','독서']],
+    ['water', ['물']]
+  ];
+  function artFor(text){
+    var t = String(text == null ? '' : text);
+    for (var i = 0; i < ART_RULES.length; i++){
+      var keys = ART_RULES[i][1];
+      for (var j = 0; j < keys.length; j++){
+        if (t.indexOf(keys[j]) >= 0) return ART_RULES[i][0];
+      }
+    }
+    return 'star';
+  }
+  function sceneIcon(name){
+    return '<svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#i-sc-' + name + '"/></svg>';
   }
 
   var storeOK = true;
@@ -972,6 +1393,27 @@
   var viewDay = dayKeyOf();
   var editDay = dayKeyOf();
   var weather = null;
+  var mode = 'morning';      /* 'morning' | 'evening' */
+  var modeManual = false;    /* 오늘 사용자가 직접 고른 모드인지 */
+  var editRMode = 'morning'; /* 설정에서 지금 고치고 있는 루틴 */
+  var AUTO_EVENING_FROM = 17; /* 17시부터는 저녁 모드로 자동 전환 */
+
+  function autoMode(){
+    return (new Date().getHours() >= AUTO_EVENING_FROM) ? 'evening' : 'morning';
+  }
+  function loadMode(){
+    var raw = null;
+    try { raw = JSON.parse(rawGet(MODE_KEY) || 'null'); } catch (e) { raw = null; }
+    if (raw && raw.date === todayStr() && (raw.mode === 'morning' || raw.mode === 'evening')){
+      modeManual = true;
+      return raw.mode;
+    }
+    modeManual = false;
+    return autoMode();
+  }
+  function saveMode(m){
+    rawSet(MODE_KEY, JSON.stringify({ date: todayStr(), mode: m }));
+  }
 
   function loadProfile(pk){
     var base = makeDefault(pk);
@@ -982,12 +1424,19 @@
     var s = base;
     if (typeof raw.start === 'string') s.start = raw.start;
     if (typeof raw.depart === 'string') s.depart = raw.depart;
+    if (typeof raw.eveningStart === 'string') s.eveningStart = raw.eveningStart;
+    if (typeof raw.bed === 'string') s.bed = raw.bed;
     if (typeof raw.sound === 'boolean') s.sound = raw.sound;
     if (typeof raw.wakeEnabled === 'boolean') s.wakeEnabled = raw.wakeEnabled;
     if (typeof raw.totalStickers === 'number') s.totalStickers = raw.totalStickers;
 
     if (Array.isArray(raw.routine) && raw.routine.length){
       s.routine = raw.routine.map(function(it){
+        return { id: it && it.id ? String(it.id) : uid(), text: String(it && it.text != null ? it.text : ''), icon: (it && STICKERS.indexOf(it.icon) >= 0) ? it.icon : 'pokeball' };
+      });
+    }
+    if (Array.isArray(raw.routineEve)){
+      s.routineEve = raw.routineEve.map(function(it){
         return { id: it && it.id ? String(it.id) : uid(), text: String(it && it.text != null ? it.text : ''), icon: (it && STICKERS.indexOf(it.icon) >= 0) ? it.icon : 'pokeball' };
       });
     }
@@ -1000,13 +1449,27 @@
         }
       });
     }
+    if (raw.calendar && typeof raw.calendar === 'object'){
+      var cal = {};
+      Object.keys(raw.calendar).forEach(function(k){
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(k)) return;
+        var rec = raw.calendar[k];
+        if (!rec || typeof rec !== 'object') return;
+        var m = !!rec.m, e = !!rec.e;
+        if (m || e) cal[k] = { m: m, e: e };
+      });
+      s.calendar = cal;
+    }
     if (raw.day && typeof raw.day === 'object'){
       s.day = {
         date: typeof raw.day.date === 'string' ? raw.day.date : '',
         done: (raw.day.done && typeof raw.day.done === 'object') ? raw.day.done : {},
         stamps: Array.isArray(raw.day.stamps) ? raw.day.stamps.filter(function(st){ return st && st.id && st.icon; }) : [],
         afterDone: (raw.day.afterDone && typeof raw.day.afterDone === 'object') ? raw.day.afterDone : {},
-        master: !!raw.day.master
+        master: !!raw.day.master,
+        doneEve: (raw.day.doneEve && typeof raw.day.doneEve === 'object') ? raw.day.doneEve : {},
+        stampsEve: Array.isArray(raw.day.stampsEve) ? raw.day.stampsEve.filter(function(st){ return st && st.id && st.icon; }) : [],
+        masterEve: !!raw.day.masterEve
       };
     }
     return s;
@@ -1049,6 +1512,20 @@
   var elStickerTotal = $('stickerTotal');
   var elMaster = $('masterBadge');
   var elBadge = $('profileBadge');
+  var elBrand = $('brandText');
+  var elRoutineTitle = $('routineTitle');
+  var elRoutineCard = $('routineCard');
+  var elAffirmLabel = $('affirmLabel');
+  var elAffirmIcon = $('affirmIcon');
+  var btnModeMorning = $('btnModeMorning');
+  var btnModeEvening = $('btnModeEvening');
+  var elCalGrid = $('calGrid');
+  var elCalTitle = $('calTitle');
+  var elCalSummary = $('calSummary');
+
+  function isEve(){ return mode === 'evening'; }
+  function activeRoutine(){ return isEve() ? (state.routineEve || []) : (state.routine || []); }
+  function activeDone(){ return isEve() ? (state.day.doneEve || {}) : (state.day.done || {}); }
 
   /* ================= chime (Web Audio) ================= */
   var audioCtx = null;
@@ -1090,68 +1567,74 @@
     var WD = ['일','월','화','수','목','금','토'];
     elDate.textContent = (now.getMonth() + 1) + '월 ' + now.getDate() + '일 ' + WD[now.getDay()] + '요일';
 
-    var startM = toMin(state.start);
-    var departM = toMin(state.depart);
     var name = PROFILES[state.key].name;
     var cur = h * 60 + m + s / 60;
-    var pct = 0, cls = '', msg = '';
 
-    if (startM == null || departM == null || departM <= startM){
-      msg = '설정에서 시작·출발 시간을 정해 주세요';
-      cls = '';
-      pct = 0;
-      elFill.className = 'fill';
-      elCount.className = 'count';
-      elCount.innerHTML = '<span class="big">' + esc(msg) + '</span>';
+    if (isEve()){
+      elLblStart.textContent = '저녁 시작 ' + (state.eveningStart || '--:--');
+      elLblDepart.textContent = '잘 시간 ' + (state.bed || '--:--');
+    } else {
       elLblStart.textContent = '시작 ' + (state.start || '--:--');
       elLblDepart.textContent = '출발 ' + (state.depart || '--:--');
-      return;
     }
 
-    elLblStart.textContent = '시작 ' + state.start;
-    elLblDepart.textContent = '출발 ' + state.depart;
+    var r = isEve() ? eveningCountdown(name, cur) : morningCountdown(name, cur);
+    elCount.className = 'count' + (r.cls ? ' ' + r.cls : '');
+    elCount.innerHTML = '<span class="big">' + esc(r.msg) + '</span>';
+    elFill.className = 'fill' + (r.cls === 'warn' ? ' warn' : (r.cls === 'ready' ? ' ready' : ''));
+    elFill.style.width = Math.max(0, Math.min(100, r.pct)) + '%';
+  }
 
+  function morningCountdown(name, cur){
+    var startM = toMin(state.start);
+    var departM = toMin(state.depart);
+    if (startM == null || departM == null || departM <= startM){
+      return { msg:'설정에서 시작·출발 시간을 정해 주세요', cls:'', pct:0 };
+    }
     if (cur < startM){
       var toStart = Math.ceil(startM - cur);
-      pct = 0;
       if (toStart > 180){
-        msg = '오늘 준비는 여기까지! 내일 아침 ' + state.start + '에 만나요';
-        cls = 'ready';
-      } else {
-        msg = name + ', ' + toStart + '분 뒤에 아침 준비 시작이야!';
-        cls = '';
+        return { msg:'오늘 준비는 여기까지! 내일 아침 ' + state.start + '에 만나요', cls:'ready', pct:0 };
       }
-      elCount.innerHTML = '<span class="big">' + esc(msg) + '</span>';
-    } else if (cur < departM){
-      var left = departM - cur;
-      var mins = Math.ceil(left);
-      pct = ((cur - startM) / (departM - startM)) * 100;
-
-      var allDone = state.routine.length > 0 && state.routine.every(function(it){ return state.day.done[it.id]; });
-      if (mins <= 3){
-        msg = '이제 신발 신고 나갈 시간! 출발까지 ' + mins + '분!';
-        cls = 'warn';
-      } else if (mins <= 10){
-        msg = name + ', 출발까지 ' + mins + '분 남았어요! 서둘러!';
-        cls = 'warn';
-      } else if (allDone){
-        msg = '준비 완벽! 출발까지 ' + mins + '분, 여유 있어요 🎉';
-        cls = '';
-      } else {
-        msg = '출발까지 ' + mins + '분 남았어요!';
-        cls = '';
-      }
-      elCount.innerHTML = '<span class="big">' + esc(msg) + '</span>';
-    } else {
-      pct = 100;
-      msg = '오늘 아침 준비 끝! 잘 다녀와요, ' + name + '! 🎉';
-      cls = 'ready';
-      elCount.innerHTML = '<span class="big">' + esc(msg) + '</span>';
+      return { msg:name + ', ' + toStart + '분 뒤에 아침 준비 시작이야!', cls:'', pct:0 };
     }
+    if (cur < departM){
+      var mins = Math.ceil(departM - cur);
+      var pct = ((cur - startM) / (departM - startM)) * 100;
+      var allDone = state.routine.length > 0 && state.routine.every(function(it){ return state.day.done[it.id]; });
+      if (mins <= 3) return { msg:'이제 신발 신고 나갈 시간! 출발까지 ' + mins + '분!', cls:'warn', pct:pct };
+      if (mins <= 10) return { msg:name + ', 출발까지 ' + mins + '분 남았어요! 서둘러!', cls:'warn', pct:pct };
+      if (allDone) return { msg:'준비 완벽! 출발까지 ' + mins + '분, 여유 있어요 🎉', cls:'', pct:pct };
+      return { msg:'출발까지 ' + mins + '분 남았어요!', cls:'', pct:pct };
+    }
+    return { msg:'오늘 아침 준비 끝! 잘 다녀와요, ' + name + '! 🎉', cls:'ready', pct:100 };
+  }
 
-    elCount.className = 'count' + (cls ? ' ' + cls : '');
-    elFill.className = 'fill' + (cls === 'warn' ? ' warn' : (cls === 'ready' ? ' ready' : ''));
-    elFill.style.width = Math.max(0, Math.min(100, pct)) + '%';
+  function eveningCountdown(name, cur){
+    var sM = toMin(state.eveningStart);
+    var bM = toMin(state.bed);
+    if (sM == null || bM == null || bM <= sM){
+      return { msg:'설정에서 저녁 시작·잘 시간을 정해 주세요', cls:'', pct:0 };
+    }
+    if (cur < sM){
+      var toStart = Math.ceil(sM - cur);
+      if (toStart > 180){
+        return { msg:'저녁 준비는 ' + state.eveningStart + '부터 시작해요 🌙', cls:'ready', pct:0 };
+      }
+      return { msg:name + ', ' + toStart + '분 뒤에 저녁 준비 시작이야!', cls:'', pct:0 };
+    }
+    if (cur < bM){
+      var mins = Math.ceil(bM - cur);
+      var pct = ((cur - sM) / (bM - sM)) * 100;
+      var list = state.routineEve || [];
+      var done = state.day.doneEve || {};
+      var allDone = list.length > 0 && list.every(function(it){ return done[it.id]; });
+      if (mins <= 5) return { msg:'이제 자는 시간! ' + mins + '분만 더 놀 수 있어요 🌙', cls:'warn', pct:pct };
+      if (mins <= 15) return { msg:name + ', 잘 시간까지 ' + mins + '분 남았어요! 서둘러!', cls:'warn', pct:pct };
+      if (allDone) return { msg:'준비 완벽! 잘 시간까지 ' + mins + '분 남았어 🌙', cls:'', pct:pct };
+      return { msg:'잘 시간까지 ' + mins + '분 남았어요!', cls:'', pct:pct };
+    }
+    return { msg:'오늘도 씩씩하게 잘 해냈어! 잘 자요 🌙', cls:'ready', pct:100 };
   }
 
   /* ================= profile badge ================= */
@@ -1166,63 +1649,79 @@
   function renderAffirm(){
     var d = new Date();
     var dayNum = Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
-    var idx = ((dayNum % AFFIRMATIONS.length) + AFFIRMATIONS.length) % AFFIRMATIONS.length;
-    elAffirm.textContent = AFFIRMATIONS[idx];
+    var list = isEve() ? EVENING_AFFIRMATIONS : AFFIRMATIONS;
+    var idx = ((dayNum % list.length) + list.length) % list.length;
+    elAffirm.textContent = list[idx];
+    if (elAffirmLabel) elAffirmLabel.textContent = isEve() ? '오늘 하루 마무리 한마디' : '오늘의 한마디';
+    if (elAffirmIcon){
+      var u = elAffirmIcon.querySelector('use');
+      if (u) u.setAttribute('href', isEve() ? '#i-eevee' : '#i-pikachu');
+    }
   }
 
   /* ================= routine ================= */
   function renderRoutine(){
-    var done = state.day.done || {};
+    var list = activeRoutine();
+    var done = activeDone();
     var count = 0;
-    if (!state.routine.length){
-      elRoutine.innerHTML = '<div class="empty">설정에서 아침 루틴 항목을 추가해 주세요.</div>';
+    if (!list.length){
+      elRoutine.innerHTML = '<div class="empty">설정에서 ' + (isEve() ? '저녁' : '아침') + ' 루틴 항목을 추가해 주세요.</div>';
       elRoutineCount.textContent = '0 / 0';
       return;
     }
-    var html = state.routine.map(function(it){
+    var html = list.map(function(it){
       var isDone = !!done[it.id];
       if (isDone) count++;
       return '<button type="button" class="todo' + (isDone ? ' done' : '') + '" data-id="' + esc(it.id) + '" aria-pressed="' + (isDone ? 'true' : 'false') + '">' +
-        '<span class="em">' + icon(it.icon) + '</span>' +
+        '<span class="art">' + sceneIcon(artFor(it.text)) + '</span>' +
         '<span class="txt">' + esc(it.text) + '</span>' +
         '<span class="tick">✓</span>' +
         '<span class="burst">✨</span>' +
       '</button>';
     }).join('');
     elRoutine.innerHTML = html;
-    elRoutineCount.textContent = count + ' / ' + state.routine.length + (count === state.routine.length ? ' 완료!' : '');
+    elRoutineCount.textContent = count + ' / ' + list.length + (count === list.length ? ' 완료!' : '');
   }
 
   function checkMaster(){
-    var all = state.routine.length > 0 && state.routine.every(function(it){ return state.day.done[it.id]; });
-    if (all && !state.day.master){
-      state.day.master = true;
+    var list = activeRoutine();
+    var done = activeDone();
+    var flagKey = isEve() ? 'masterEve' : 'master';
+    var all = list.length > 0 && list.every(function(it){ return done[it.id]; });
+    if (all && !state.day[flagKey]){
+      state.day[flagKey] = true;
       save();
+      syncCalendar();
       playChime('fanfare');
       showCelebration();
       renderRewards();
+      renderCalendar();
       return;
     }
-    if (!all && state.day.master){
-      state.day.master = false;
+    if (!all && state.day[flagKey]){
+      state.day[flagKey] = false;
       save();
+      syncCalendar();
       renderRewards();
+      renderCalendar();
     }
   }
 
   function toggleRoutine(id, btnEl){
     ensureDay();
-    if (!state.day.done) state.day.done = {};
-    if (!Array.isArray(state.day.stamps)) state.day.stamps = [];
+    var doneKey = isEve() ? 'doneEve' : 'done';
+    var stampsKey = isEve() ? 'stampsEve' : 'stamps';
+    var done = state.day[doneKey] || (state.day[doneKey] = {});
+    if (!Array.isArray(state.day[stampsKey])) state.day[stampsKey] = [];
 
-    if (state.day.done[id]){
-      delete state.day.done[id];
-      state.day.stamps = state.day.stamps.filter(function(st){ return st.id !== id; });
+    if (done[id]){
+      delete done[id];
+      state.day[stampsKey] = state.day[stampsKey].filter(function(st){ return st.id !== id; });
       state.totalStickers = Math.max(0, state.totalStickers - 1);
     } else {
-      state.day.done[id] = true;
+      done[id] = true;
       var pick = STICKERS[Math.floor(Math.random() * STICKERS.length)];
-      state.day.stamps.push({ id: id, icon: pick });
+      state.day[stampsKey].push({ id: id, icon: pick });
       state.totalStickers = (state.totalStickers || 0) + 1;
       playChime('stamp');
       if (btnEl && btnEl.classList){
@@ -1238,8 +1737,8 @@
 
   /* ================= rewards ================= */
   function renderRewards(){
-    var stamps = Array.isArray(state.day.stamps) ? state.day.stamps : [];
-    var slots = Math.max(state.routine.length, stamps.length, 6);
+    var stamps = isEve() ? (state.day.stampsEve || []) : (state.day.stamps || []);
+    var slots = Math.max(activeRoutine().length, stamps.length, 6);
     var html = '';
     for (var i = 0; i < slots; i++){
       if (i < stamps.length){
@@ -1252,8 +1751,81 @@
 
     var total = state.totalStickers || 0;
     elStickerTotal.textContent = '지금까지 ' + total + '개 모았어요';
-    if (state.day.master) elMaster.classList.add('show');
+    var flag = isEve() ? state.day.masterEve : state.day.master;
+    if (flag) elMaster.classList.add('show');
     else elMaster.classList.remove('show');
+  }
+
+  /* ================= 🌱 월간 포켓몬 스티커판 ================= */
+  var calYear = 0, calMonth = 0;
+
+  function stickerForDate(key){
+    var h = 0;
+    for (var i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) % 99991;
+    return STICKERS[h % STICKERS.length];
+  }
+
+  function syncCalendar(){
+    if (!state.calendar || typeof state.calendar !== 'object') state.calendar = {};
+    var key = todayStr();
+    var m = !!(state.day && state.day.master);
+    var e = !!(state.day && state.day.masterEve);
+    var before = JSON.stringify(state.calendar[key] || null);
+    if (!m && !e) delete state.calendar[key];
+    else state.calendar[key] = { m: m, e: e };
+    var after = JSON.stringify(state.calendar[key] || null);
+    if (before !== after) save();
+  }
+
+  function renderCalendar(){
+    if (!calYear){ var n0 = new Date(); calYear = n0.getFullYear(); calMonth = n0.getMonth(); }
+    syncCalendar();
+    var cal = state.calendar || {};
+    elCalTitle.textContent = calYear + '년 ' + (calMonth + 1) + '월';
+
+    var startDow = new Date(calYear, calMonth, 1).getDay();
+    var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    var t = new Date();
+    var isThis = (t.getFullYear() === calYear && t.getMonth() === calMonth);
+
+    var html = '', fullCount = 0, mOnly = 0, eOnly = 0;
+    for (var b = 0; b < startDow; b++) html += '<div class="cal-cell blank" aria-hidden="true"></div>';
+
+    for (var d = 1; d <= daysInMonth; d++){
+      var key = calYear + '-' + pad2(calMonth + 1) + '-' + pad2(d);
+      var rec = cal[key];
+      var both = !!(rec && rec.m && rec.e);
+      var one = !!(rec && (rec.m || rec.e));
+      if (both) fullCount++;
+      else if (one){ if (rec.m) mOnly++; else eOnly++; }
+
+      var cls = 'cal-cell';
+      if (isThis && d === t.getDate()) cls += ' today';
+      if (both) cls += ' full';
+      else if (one) cls += ' has';
+
+      var inner = '<span class="cal-num">' + d + '</span>';
+      if (both){
+        inner += '<span class="cal-poke">' + icon(stickerForDate(key)) + '</span>';
+      } else if (rec && rec.m){
+        inner += '<span class="cal-mark">🌅</span>';
+      } else if (rec && rec.e){
+        inner += '<span class="cal-mark">🌙</span>';
+      }
+
+      var tip = calYear + '년 ' + (calMonth + 1) + '월 ' + d + '일';
+      if (both) tip += ' · 아침·저녁 모두 완료!';
+      else if (rec && rec.m) tip += ' · 아침 완료';
+      else if (rec && rec.e) tip += ' · 저녁 완료';
+
+      html += '<div class="' + cls + '" data-date="' + key + '" title="' + esc(tip) + '">' + inner + '</div>';
+    }
+
+    elCalGrid.innerHTML = html;
+    elCalSummary.textContent = '이번 달 포켓몬 스티커 ' + fullCount + '개' + ((mOnly + eOnly) ? ' · 반쪽 ' + (mOnly + eOnly) + '일' : '');
+    if ($('calStatM')) $('calStatM').textContent = mOnly;
+    if ($('calStatE')) $('calStatE').textContent = eOnly;
+    if ($('calStatBoth')) $('calStatBoth').textContent = fullCount;
   }
 
   /* ================= after school ================= */
@@ -1487,7 +2059,9 @@
   function showCelebration(){
     var p = PROFILES[state.key];
     var t = document.getElementById('celebText');
-    if (t) t.textContent = p.name + ', 아침 준비를 전부 해냈어요! 정말 멋져요.';
+    if (t) t.textContent = isEve()
+      ? p.name + ', 오늘 하루도 멋지게 마무리했어! 잘 자요 🌙'
+      : p.name + ', 아침 준비를 전부 해냈어요! 정말 멋져요.';
     var c = $('celebrate');
     c.hidden = false;
     confetti();
@@ -1600,9 +2174,12 @@
   function renderSettings(){
     $('inpStart').value = state.start;
     $('inpDepart').value = state.depart;
+    $('inpEveStart').value = state.eveningStart;
+    $('inpBed').value = state.bed;
     $('swSound').checked = !!state.sound;
     $('swWake').checked = !!state.wakeEnabled;
     renderProfilePick();
+    renderRoutineModeTabs();
     renderRoutineEdit();
     renderAfterEdit();
     renderDayTabsEdit();
@@ -1611,13 +2188,27 @@
     else setWakeStatus('꺼짐', '');
   }
 
+  function routineForEdit(){ return editRMode === 'evening' ? state.routineEve : state.routine; }
+
+  function renderRoutineModeTabs(){
+    var btns = $('routineModeTabs').querySelectorAll('button[data-rmode]');
+    for (var i = 0; i < btns.length; i++){
+      var m = btns[i].getAttribute('data-rmode');
+      if (m === editRMode) btns[i].classList.add('on');
+      else btns[i].classList.remove('on');
+      btns[i].setAttribute('aria-pressed', m === editRMode ? 'true' : 'false');
+    }
+  }
+
   function renderRoutineEdit(){
     var box = $('routineEdit');
-    if (!state.routine.length){
+    var list = routineForEdit();
+    if (!Array.isArray(list)) list = state.routine;
+    if (!list.length){
       box.innerHTML = '<div class="empty">항목이 없어요. 아래 버튼으로 추가해 주세요.</div>';
       return;
     }
-    box.innerHTML = state.routine.map(function(it, i){
+    box.innerHTML = list.map(function(it){
       return '<div class="edit-row">' +
         '<span class="em">' + icon(it.icon) + '</span>' +
         '<input type="text" data-routine="' + esc(it.id) + '" value="' + esc(it.text) + '" placeholder="예: 세수하고 양치하기" maxlength="40">' +
@@ -1654,6 +2245,7 @@
       var rid = rInputs[i].getAttribute('data-routine');
       var val = rInputs[i].value;
       state.routine.forEach(function(it){ if (it.id === rid) it.text = val; });
+      if (Array.isArray(state.routineEve)) state.routineEve.forEach(function(it){ if (it.id === rid) it.text = val; });
     }
     var aInputs = $('afterEdit').querySelectorAll('input[data-after]');
     var aItems = state.after[editDay] || [];
@@ -1666,6 +2258,7 @@
   }
 
   function openSettings(){
+    editRMode = mode;
     $('overlay').hidden = false;
     renderSettings();
   }
@@ -1675,14 +2268,44 @@
     renderAll();
   }
 
+  /* ================= mode (아침 / 저녁) ================= */
+  function applyMode(){
+    document.body.setAttribute('data-mode', mode);
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', mode === 'evening' ? '#151834' : '#FFCB05');
+    document.title = (mode === 'evening' ? '저녁' : '아침') + ' 루틴 대시보드 · 포켓몬';
+    if (elBrand) elBrand.textContent = (mode === 'evening' ? '저녁' : '아침') + ' 루틴 대시보드';
+    if (elRoutineTitle) elRoutineTitle.textContent = (mode === 'evening' ? '저녁' : '아침') + ' 준비 루틴';
+    if (elRoutineCard) elRoutineCard.setAttribute('aria-label', (mode === 'evening' ? '저녁' : '아침') + ' 준비 루틴');
+    if (btnModeMorning && btnModeEvening){
+      btnModeMorning.classList.toggle('on', mode === 'morning');
+      btnModeEvening.classList.toggle('on', mode === 'evening');
+      btnModeMorning.setAttribute('aria-pressed', mode === 'morning' ? 'true' : 'false');
+      btnModeEvening.setAttribute('aria-pressed', mode === 'evening' ? 'true' : 'false');
+    }
+    renderAffirm();
+    renderRoutine();
+    renderRewards();
+    renderClock();
+  }
+
+  function setMode(m){
+    if ((m !== 'morning' && m !== 'evening') || m === mode) return;
+    mode = m;
+    modeManual = true;
+    saveMode(m);
+    ensureDay();
+    applyMode();
+    renderAfter();
+  }
+
   /* ================= render all ================= */
   function renderAll(){
     document.body.setAttribute('data-profile', state.key);
     renderBadge();
-    renderRoutine();
+    applyMode();
     renderAfter();
-    renderRewards();
-    renderClock();
+    renderCalendar();
   }
 
   /* ================= events ================= */
@@ -1745,6 +2368,49 @@
     save();
     renderClock();
   });
+  $('inpEveStart').addEventListener('change', function(){
+    var v = this.value;
+    if (!v) return;
+    state.eveningStart = v;
+    save();
+    renderClock();
+  });
+  $('inpBed').addEventListener('change', function(){
+    var v = this.value;
+    if (!v) return;
+    state.bed = v;
+    save();
+    renderClock();
+  });
+
+  /* 상단 아침 / 저녁 전환 */
+  btnModeMorning.addEventListener('click', function(){ setMode('morning'); });
+  btnModeEvening.addEventListener('click', function(){ setMode('evening'); });
+
+  /* 월간 스티커판 달 이동 */
+  $('btnCalPrev').addEventListener('click', function(){
+    calMonth--;
+    if (calMonth < 0){ calMonth = 11; calYear--; }
+    renderCalendar();
+  });
+  $('btnCalNext').addEventListener('click', function(){
+    calMonth++;
+    if (calMonth > 11){ calMonth = 0; calYear++; }
+    renderCalendar();
+  });
+
+  /* 설정 안의 루틴 탭 (아침 / 저녁) */
+  $('routineModeTabs').addEventListener('click', function(e){
+    var btn = e.target.closest ? e.target.closest('button[data-rmode]') : null;
+    if (!btn) return;
+    var m = btn.getAttribute('data-rmode');
+    if (m !== 'morning' && m !== 'evening') return;
+    if (m === editRMode) return;
+    flushSettingsInputs();
+    editRMode = m;
+    renderRoutineModeTabs();
+    renderRoutineEdit();
+  });
 
   $('swSound').addEventListener('change', function(){
     state.sound = !!this.checked;
@@ -1764,26 +2430,40 @@
   });
 
   /* routine edit: text */
-  $('routineEdit').addEventListener('input', function(e){
+  function syncRoutineInput(e){
     var t = e.target;
     if (!t || !t.getAttribute) return;
     var id = t.getAttribute('data-routine');
     if (!id) return;
-    var item = null;
-    state.routine.forEach(function(it){ if (it.id === id) item = it; });
-    if (item){
-      item.text = t.value;
-      save();
+    var val = t.value;
+    var lists = [state.routine, state.routineEve];
+    for (var i = 0; i < lists.length; i++){
+      if (!Array.isArray(lists[i])) continue;
+      lists[i].forEach(function(it){ if (it.id === id) it.text = val; });
     }
-  });
+    save();
+  }
+  $('routineEdit').addEventListener('input', syncRoutineInput);
+  $('routineEdit').addEventListener('change', syncRoutineInput);
+  $('routineEdit').addEventListener('compositionend', syncRoutineInput);
+
   $('routineEdit').addEventListener('click', function(e){
     var btn = e.target.closest ? e.target.closest('[data-del-routine]') : null;
     if (!btn) return;
     var id = btn.getAttribute('data-del-routine');
-    state.routine = state.routine.filter(function(it){ return it.id !== id; });
-    if (state.day.done[id]){
+    if (editRMode === 'evening'){
+      state.routineEve = state.routineEve.filter(function(it){ return it.id !== id; });
+    } else {
+      state.routine = state.routine.filter(function(it){ return it.id !== id; });
+    }
+    if (state.day.done && state.day.done[id]){
       delete state.day.done[id];
       state.day.stamps = (state.day.stamps || []).filter(function(st){ return st.id !== id; });
+      state.totalStickers = Math.max(0, state.totalStickers - 1);
+    }
+    if (state.day.doneEve && state.day.doneEve[id]){
+      delete state.day.doneEve[id];
+      state.day.stampsEve = (state.day.stampsEve || []).filter(function(st){ return st.id !== id; });
       state.totalStickers = Math.max(0, state.totalStickers - 1);
     }
     save();
@@ -1793,7 +2473,13 @@
   });
 
   $('btnAddRoutine').addEventListener('click', function(){
-    state.routine.push({ id: uid(), text: '', icon: STICKERS[Math.floor(Math.random() * STICKERS.length)] });
+    var item = { id: uid(), text: '', icon: STICKERS[Math.floor(Math.random() * STICKERS.length)] };
+    if (editRMode === 'evening'){
+      if (!Array.isArray(state.routineEve)) state.routineEve = [];
+      state.routineEve.push(item);
+    } else {
+      state.routine.push(item);
+    }
     save();
     renderRoutineEdit();
     renderRoutine();
@@ -1848,7 +2534,7 @@
 
   /* reset */
   $('btnResetToday').addEventListener('click', function(){
-    if (!window.confirm('오늘 체크한 내용만 지울까요? (모은 스티커 총개수는 그대로예요)')) return;
+    if (!window.confirm('오늘 체크한 내용만 지울까요? (아침·저녁 모두 지워지고, 모은 스티커 총개수는 그대로예요)')) return;
     state.day = blankDay(todayStr());
     save();
     renderRoutine();
@@ -1889,22 +2575,33 @@
     if (state.profile === 'gold' || state.profile === 'diamond') profileKey = state.profile;
     state.key = profileKey;
 
+    /* 오후 5시 전에는 아침, 그 뒤에는 저녁 — 상단 버튼으로 바꾼 선택은 그날 하루 유지 */
+    mode = loadMode();
+    editRMode = mode;
+
     ensureDay();
     viewDay = dayKeyOf();
     editDay = viewDay;
 
     renderAll();
-    renderAffirm();
     loadCachedWeather();
     renderWeather();
 
     window.setInterval(function(){
       var changed = ensureDay();
       if (changed){
-        renderRoutine();
-        renderAfter();
-        renderRewards();
-        renderAffirm();
+        mode = loadMode();
+        calYear = 0; calMonth = 0;
+        renderAll();
+      }
+      /* 오늘 직접 고른 모드가 아니면 시각에 따라 아침↔저녁 자동 전환 */
+      if (!modeManual && !changed){
+        var am = autoMode();
+        if (am !== mode){
+          mode = am;
+          applyMode();
+          renderAfter();
+        }
       }
       renderClock();
     }, 500);
