@@ -778,6 +778,10 @@
         </p>
       </section>
 
+      <div class="set-save-bar" style="position:sticky;bottom:0;background:var(--card,#fff);padding:12px 0 4px;border-top:1px solid rgba(0,0,0,.08);margin-top:8px;">
+        <button class="btn" id="btnSaveSettings" type="button" style="width:100%;background:#3b82f6;color:#fff;font-weight:700;padding:14px;border-radius:14px;font-size:16px;">저장하고 닫기</button>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1644,11 +1648,29 @@
     }).join('');
   }
 
+  function flushSettingsInputs(){
+    var rInputs = $('routineEdit').querySelectorAll('input[data-routine]');
+    for (var i = 0; i < rInputs.length; i++){
+      var rid = rInputs[i].getAttribute('data-routine');
+      var val = rInputs[i].value;
+      state.routine.forEach(function(it){ if (it.id === rid) it.text = val; });
+    }
+    var aInputs = $('afterEdit').querySelectorAll('input[data-after]');
+    var aItems = state.after[editDay] || [];
+    for (var j = 0; j < aInputs.length; j++){
+      var aid = aInputs[j].getAttribute('data-after');
+      var aval = aInputs[j].value;
+      aItems.forEach(function(it){ if (it.id === aid) it.text = aval; });
+    }
+    save();
+  }
+
   function openSettings(){
     $('overlay').hidden = false;
     renderSettings();
   }
   function closeSettings(){
+    flushSettingsInputs();
     $('overlay').hidden = true;
     renderAll();
   }
@@ -1686,6 +1708,12 @@
   $('btnSettings').addEventListener('click', openSettings);
   elBadge.addEventListener('click', openSettings);
   $('btnCloseSettings').addEventListener('click', closeSettings);
+  $('btnSaveSettings').addEventListener('click', function(){
+    flushSettingsInputs();
+    viewDay = editDay;
+    $('overlay').hidden = true;
+    renderAll();
+  });
   $('overlay').addEventListener('click', function(e){
     if (e.target === $('overlay')) closeSettings();
   });
@@ -1778,12 +1806,13 @@
   $('dayTabsEdit').addEventListener('click', function(e){
     var btn = e.target.closest ? e.target.closest('[data-editday]') : null;
     if (!btn) return;
+    flushSettingsInputs();
     editDay = btn.getAttribute('data-editday');
     renderDayTabsEdit();
     renderAfterEdit();
   });
 
-  $('afterEdit').addEventListener('input', function(e){
+  function syncAfterInput(e){
     var t = e.target;
     if (!t || !t.getAttribute) return;
     var id = t.getAttribute('data-after');
@@ -1791,7 +1820,10 @@
     var items = state.after[editDay] || [];
     items.forEach(function(it){ if (it.id === id) it.text = t.value; });
     save();
-  });
+  }
+  $('afterEdit').addEventListener('input', syncAfterInput);
+  $('afterEdit').addEventListener('change', syncAfterInput);
+  $('afterEdit').addEventListener('compositionend', syncAfterInput);
 
   $('afterEdit').addEventListener('click', function(e){
     var btn = e.target.closest ? e.target.closest('[data-del-after]') : null;
