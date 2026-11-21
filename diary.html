@@ -27,6 +27,8 @@
     --accent:#AE553A;
     --accent-deep:#8C3F28;
     --accent-soft:#F8E8E0;
+    --bubble:#FCEBDF;
+    --bubble-ink:#3A2A20;
     --ok:#4E7A57;
     --warn:#B4792C;
     --bad:#B0453B;
@@ -48,6 +50,8 @@
       --accent:#E28B6C;
       --accent-deep:#F0A487;
       --accent-soft:#3A2A22;
+      --bubble:#33261F;
+      --bubble-ink:#F1E5D7;
       --ok:#8FBF97;
       --warn:#D8A45F;
       --bad:#E0847A;
@@ -586,18 +590,134 @@
   /* ---------- tabbar ---------- */
   .tabbar{
     position:fixed;left:0;right:0;bottom:0;z-index:50;
-    display:grid;grid-template-columns:repeat(4,1fr);
-    padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+    display:grid;grid-template-columns:repeat(5,1fr);gap:2px;
+    padding:6px 5px calc(6px + env(safe-area-inset-bottom));
     background:color-mix(in srgb, var(--card) 88%, transparent);
     -webkit-backdrop-filter:blur(20px) saturate(1.3);
     backdrop-filter:blur(20px) saturate(1.3);
     border-top:1px solid var(--line);
   }
-  .tabbar button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 4px;border-radius:12px;color:var(--muted);font-size:10px;letter-spacing:.01em}
+  .tabbar button{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;padding:6px 0 4px;border-radius:12px;color:var(--muted);font-size:10px;letter-spacing:.01em}
+  .tabbar button span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .tabbar button svg{width:21px;height:21px}
   .tabbar button.on{color:var(--accent-deep)}
   .tabbar button.on svg{stroke-width:2}
+  @media (max-width:359px){
+    .tabbar{padding-left:2px;padding-right:2px}
+    .tabbar button{font-size:9px;gap:2px}
+    .tabbar button svg{width:19px;height:19px}
+  }
   @media (min-width:920px){ .tabbar{display:none} }
+
+  /* ---------- 메모 (나와의 채팅) ---------- */
+  .memo-head{display:flex;flex-direction:column;gap:9px;margin:4px 0 0}
+  .memo-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .memo-title-row .deco{font-size:.46em;margin-left:.42em;vertical-align:.18em;color:var(--muted)}
+  .memo-title-row .sub{margin:6px 0 0;font-size:11.5px;line-height:1.5;color:var(--muted)}
+  .pinbar{
+    border:1px solid color-mix(in srgb, var(--accent) 26%, var(--line));
+    border-radius:14px;overflow:hidden;
+    background:linear-gradient(150deg, color-mix(in srgb, var(--accent-soft) 55%, var(--card)) 0%, var(--card) 100%);
+  }
+  .pinbar-head{display:flex;align-items:center;gap:6px;width:100%;padding:9px 11px;text-align:left;font-size:12px;font-weight:650;color:var(--accent-deep)}
+  .pinbar-head .peek{flex:1;min-width:0;font-size:11.5px;font-weight:500;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pinbar-head .n{font-size:10.5px;font-weight:700;color:var(--muted);white-space:nowrap}
+  .pinbar-head .chev{width:13px;height:13px;flex:0 0 auto;color:var(--muted);transition:transform .2s}
+  .pinbar-head .chev svg{width:13px;height:13px}
+  .pinbar[data-open="1"] .pinbar-head .peek{display:none}
+  .pinbar[data-open="1"] .pinbar-head .chev{transform:rotate(180deg)}
+  .pinlist{display:flex;flex-direction:column;gap:2px;padding:0 6px 7px}
+  .pinrow{display:flex;align-items:center;gap:4px;width:100%}
+  .pinrow .txt{flex:1;min-width:0;padding:6px 7px;border-radius:9px;text-align:left;font-size:12px;line-height:1.4;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pinrow .txt:hover{background:color-mix(in srgb, var(--card) 75%, transparent)}
+  .pinrow .cpy{flex:0 0 auto;width:27px;height:27px;border-radius:8px;display:grid;place-items:center;font-size:12px;color:var(--muted)}
+  .pinrow .cpy:hover{color:var(--accent-deep);background:color-mix(in srgb, var(--accent) 12%, transparent)}
+  .memo-search{display:flex;align-items:center;gap:8px;height:40px;padding:0 11px;border-radius:12px;border:1px solid var(--line);background:var(--paper-2)}
+  .memo-search svg{width:15px;height:15px;flex:0 0 auto;color:var(--muted)}
+  .memo-search input{flex:1;min-width:0;height:100%;border:0;background:transparent;outline:none;font-size:14px;-webkit-appearance:none;appearance:none}
+  .memo-search input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
+  .memo-search .cnt{font-size:10.5px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .memo-search .cls{width:24px;height:24px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;font-size:12px;color:var(--muted)}
+
+  .memo-list{display:flex;flex-direction:column;gap:3px;padding:6px 0 6px}
+  #view-memo.on{display:flex;flex-direction:column;min-height:var(--memo-fill,0px)}
+  #view-memo .memo-list{margin-top:auto}
+  @media (min-width:920px){ #view-memo.on{min-height:0} }
+  .day-sep{display:flex;justify-content:center;margin:12px 0 9px}
+  .day-sep span{font-size:10.5px;color:var(--muted);padding:4px 12px;border-radius:99px;background:color-mix(in srgb, var(--ink) 5%, transparent)}
+  .msg{display:flex;justify-content:flex-end;align-items:flex-end;gap:5px;padding:1px}
+  .msg .mt{flex:0 0 auto;margin-bottom:2px;font-size:9.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:.01em}
+  .msg .pinmark{flex:0 0 auto;margin-bottom:3px;font-size:9px;opacity:.7}
+  .bub{
+    max-width:78%;padding:9px 13px;border-radius:16px 16px 4px 16px;
+    background:var(--bubble);color:var(--bubble-ink);
+    font-size:14px;line-height:1.5;letter-spacing:-.005em;
+    word-break:keep-all;overflow-wrap:anywhere;white-space:pre-wrap;
+    cursor:pointer;box-shadow:0 1px 2px rgba(43,38,33,.05);
+    transition:box-shadow .16s, transform .12s;
+  }
+  .bub:active{transform:scale(.99)}
+  .bub a{color:var(--accent-deep);text-decoration:underline;text-underline-offset:2px;word-break:break-all}
+  .msg.pinned .bub{box-shadow:0 0 0 1.5px color-mix(in srgb, var(--accent) 42%, transparent)}
+  .msg.flash .bub{animation:bubFlash 1.5s ease}
+  @keyframes bubFlash{0%,100%{background:var(--bubble)}35%{background:color-mix(in srgb, var(--accent) 26%, var(--bubble))}}
+  .memo-empty{display:flex;flex-direction:column;align-items:center;gap:6px;padding:46px 18px 34px;text-align:center}
+  .memo-empty .ico{font-size:30px;line-height:1;opacity:.9}
+  .memo-empty .t{margin:8px 0 0;font-size:14px;font-weight:650;color:var(--ink-2);word-break:keep-all}
+  .memo-empty .d{margin:0;font-size:12px;line-height:1.7;color:var(--muted);word-break:keep-all}
+  .memo-none{margin:30px 6px;text-align:center;font-size:12.5px;line-height:1.6;color:var(--muted);word-break:keep-all}
+
+  #memoComposer{position:fixed;left:var(--memo-left,0px);right:var(--memo-right,0px);bottom:max(var(--tabbar-h,62px), var(--kb-offset,0px));z-index:46;display:none;justify-content:center;pointer-events:none}
+  body.memo-open #memoComposer{display:flex}
+  body.memo-open{padding-bottom:calc(var(--tabbar-h,62px) + var(--composer-h,64px) + 14px)}
+  body.memo-open .main{min-height:0}
+  body.memo-open .shell{min-height:0}
+  #view-memo .memo-list.is-empty{margin-top:auto;margin-bottom:auto}
+  .memo-form{
+    pointer-events:auto;
+    width:100%;max-width:900px;display:flex;align-items:flex-end;gap:8px;
+    padding:8px 16px;border-top:1px solid var(--line);
+    background:color-mix(in srgb, var(--card) 93%, transparent);
+    -webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);
+  }
+  .memo-ta{
+    flex:1;min-width:0;height:40px;max-height:104px;padding:9px 14px;
+    border:1px solid var(--line);border-radius:20px;background:var(--paper-2);
+    font-size:15px;line-height:1.45;color:var(--ink);outline:none;resize:none;overflow-y:auto;
+    transition:border-color .16s, background .16s;
+  }
+  .memo-ta::placeholder{color:var(--muted);opacity:.85}
+  .memo-ta:focus{border-color:var(--accent);background:var(--card)}
+  .send-btn{
+    flex:0 0 auto;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
+    background:var(--accent);color:#fff;box-shadow:0 6px 16px -10px var(--accent);
+    transition:transform .12s, background .18s;
+  }
+  .send-btn svg{width:18px;height:18px}
+  .send-btn:hover{background:var(--accent-deep)}
+  .send-btn:active{transform:scale(.94)}
+  @media (prefers-color-scheme: dark){ .send-btn{color:#1B1712} }
+  @media (min-width:920px){
+    #memoComposer{bottom:0}
+    .memo-form{max-width:880px;padding:10px 12px 18px;border-top:0;background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none}
+    .memo-form .memo-ta{background:var(--card);box-shadow:var(--shadow)}
+    body.memo-open{padding-bottom:0}
+    body.memo-open #viewRoot{padding-bottom:calc(var(--composer-h,64px) + 40px)}
+    .memo-list{padding-top:10px}
+  }
+
+  #msgPop{
+    position:fixed;z-index:70;display:flex;gap:1px;padding:4px;
+    background:var(--card);border:1px solid var(--line);border-radius:13px;
+    box-shadow:0 16px 40px -18px rgba(0,0,0,.5);
+    animation:popIn .14s ease;
+  }
+  @keyframes popIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+  #msgPop button{display:inline-flex;align-items:center;gap:4px;height:33px;padding:0 10px;border-radius:9px;font-size:11.5px;font-weight:650;color:var(--ink-2);white-space:nowrap}
+  #msgPop button:hover{background:color-mix(in srgb, var(--ink) 6%, transparent)}
+  #msgPop button.danger{color:var(--bad)}
+  body.memo-open #toast{bottom:calc(var(--tabbar-h,62px) + var(--composer-h,64px) + 14px)}
+  @media (min-width:920px){ body.memo-open #toast{bottom:calc(var(--composer-h,64px) + 18px)} }
 
   /* ---------- sheet ---------- */
   #sheet{position:fixed;inset:0;z-index:80;display:flex;align-items:flex-end;justify-content:center}
@@ -664,6 +784,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="8" width="17" height="12.5" rx="2"/><path d="M3.5 12.5h17M12 8v12.5"/><path d="M12 8c-1.6 0-4.2-.6-4.2-2.6C7.8 3.9 9.6 3.4 12 8c2.4-4.6 4.2-4.1 4.2-2.6C16.2 7.4 13.6 8 12 8z"/></svg>
         <span>체험단</span>
       </button>
+      <button data-tab="memo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 11.8c0 4-3.85 7.2-8.6 7.2-1.05 0-2.05-.15-2.96-.43L4.3 20.2l1.27-3.6C4.1 15.3 3.4 13.6 3.4 11.8c0-4 3.85-7.2 8.6-7.2s8.6 3.2 8.6 7.2z"/><circle cx="8.6" cy="11.9" r=".85" fill="currentColor" stroke="none"/><circle cx="12" cy="11.9" r=".85" fill="currentColor" stroke="none"/><circle cx="15.4" cy="11.9" r=".85" fill="currentColor" stroke="none"/></svg>
+        <span>메모</span>
+      </button>
     </nav>
     <div class="side-foot">
       <p class="note">이 다이어리는 이 기기 브라우저에만 저장됩니다. 가끔 JSON으로 백업해 두세요.</p>
@@ -688,6 +812,7 @@
       <section class="view" id="view-calendar" aria-label="캘린더"></section>
       <section class="view" id="view-money" aria-label="가계부"></section>
       <section class="view" id="view-campaign" aria-label="체험단"></section>
+      <section class="view" id="view-memo" aria-label="메모"></section>
     </main>
 
     <footer class="appfoot">My Diary · 이 기기에만 저장돼요 · 가끔 <button data-act="settings">백업</button>해 두세요</footer>
@@ -710,10 +835,25 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="8" width="17" height="12.5" rx="2"/><path d="M3.5 12.5h17M12 8v12.5"/><path d="M12 8c-1.6 0-4.2-.6-4.2-2.6C7.8 3.9 9.6 3.4 12 8c2.4-4.6 4.2-4.1 4.2-2.6C16.2 7.4 13.6 8 12 8z"/></svg>
       <span>체험단</span>
     </button>
+    <button data-tab="memo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 11.8c0 4-3.85 7.2-8.6 7.2-1.05 0-2.05-.15-2.96-.43L4.3 20.2l1.27-3.6C4.1 15.3 3.4 13.6 3.4 11.8c0-4 3.85-7.2 8.6-7.2s8.6 3.2 8.6 7.2z"/><circle cx="8.6" cy="11.9" r=".85" fill="currentColor" stroke="none"/><circle cx="12" cy="11.9" r=".85" fill="currentColor" stroke="none"/><circle cx="15.4" cy="11.9" r=".85" fill="currentColor" stroke="none"/></svg>
+      <span>메모</span>
+    </button>
   </nav>
 </div>
 
 <div id="toast" role="status" aria-live="polite"></div>
+
+<div id="memoComposer">
+  <form class="memo-form" data-form="memo" autocomplete="off">
+    <textarea class="memo-ta" id="memoInput" rows="1" maxlength="2000" placeholder="카톡하듯 툭 — 나한테만 남는 메모" aria-label="메모 입력"></textarea>
+    <button class="send-btn" type="submit" aria-label="보내기">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19.5V5"/><path d="M6.2 10.6 12 4.8l5.8 5.8"/></svg>
+    </button>
+  </form>
+</div>
+
+<div id="msgPop" role="menu" aria-label="메모 기능" hidden></div>
 
 <div id="sheet" hidden>
   <div class="sheet-bd" data-act="close-sheet"></div>
@@ -891,6 +1031,7 @@
       v: 2,
       events: [],
       memos: {},
+      chatNotes: [],
       cards: [],
       expenses: [],
       campaigns: [],
@@ -919,6 +1060,14 @@
       };
     }) : [];
     s.memos = (s.memos && typeof s.memos === 'object' && !Array.isArray(s.memos)) ? s.memos : {};
+    s.chatNotes = Array.isArray(s.chatNotes) ? s.chatNotes.filter(Boolean).map(function (n) {
+      return {
+        id: String(n.id || uid()),
+        text: String(n.text == null ? '' : n.text).slice(0, 2000),
+        ts: Number(n.ts) || Date.now(),
+        pinned: !!n.pinned
+      };
+    }).filter(function (n) { return n.text.trim(); }).sort(function (a, b) { return a.ts - b.ts; }) : [];
     s.cards = Array.isArray(s.cards) ? s.cards.filter(Boolean).map(function (c) {
       return {
         id: c.id || uid(), issuer: c.issuer || '', name: c.name || '',
@@ -986,7 +1135,8 @@
     return { text: list[i], mode: cheerMode };
   }
 
-  var VIEWS = ['today', 'calendar', 'money', 'campaign'];
+  var VIEWS = ['today', 'calendar', 'money', 'campaign', 'memo'];
+  var lastView = '';
   function currentView() {
     var h = (location.hash || '').replace(/^#/, '');
     return VIEWS.indexOf(h) >= 0 ? h : 'today';
@@ -1000,10 +1150,19 @@
     var v = currentView();
     $$('.view').forEach(function (el) { el.classList.toggle('on', el.id === 'view-' + v); });
     $$('[data-tab]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-tab') === v); });
+    closeMsgPop();
+    document.body.classList.toggle('memo-open', v === 'memo');
     if (v === 'today') renderToday();
     else if (v === 'calendar') renderCalendar();
     else if (v === 'money') renderMoney();
-    else renderCampaign();
+    else if (v === 'campaign') renderCampaign();
+    else renderMemo();
+    syncMemoLayout();
+    if (v === 'memo') {
+      autoGrow($('#memoInput'));
+      if (lastView !== 'memo' || memoScrollPending) { memoScrollPending = false; scrollMemoBottom(); }
+    }
+    lastView = v;
     var d = new Date();
     var td = $('#topDate');
     if (td) td.textContent = d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + WD[d.getDay()] + '요일';
@@ -1664,6 +1823,196 @@
   }
 
   /* ============================================================
+     메모 — 카톡 '나와의 채팅' 스타일
+  ============================================================ */
+  var memoQuery = '';
+  var memoSearchOn = false;
+  var pinbarOpen = true;
+  var memoScrollPending = false;
+  var msgPopId = '';
+
+  var ICO = {
+    search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.3"/><path d="M15.8 15.8 20.4 20.4"/></svg>',
+    chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5l6 6 6-6"/></svg>'
+  };
+
+  function memoNotes() {
+    return state.chatNotes.slice().sort(function (a, b) { return a.ts - b.ts || String(a.id).localeCompare(String(b.id)); });
+  }
+  function noteById(id) {
+    return state.chatNotes.filter(function (n) { return n.id === id; })[0] || null;
+  }
+  function memoTime(ts) {
+    var d = new Date(ts);
+    var h = d.getHours();
+    var hh = h % 12; if (hh === 0) hh = 12;
+    return (h < 12 ? '오전 ' : '오후 ') + hh + ':' + pad(d.getMinutes());
+  }
+  function memoDayLabel(ts) {
+    var d = new Date(ts);
+    return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + WD[d.getDay()] + '요일';
+  }
+  /* 텍스트 속 http(s) 주소만 링크로 — 나머지는 그대로 이스케이프 */
+  function linkify(text) {
+    return esc(text).replace(/https?:\/\/[^\s<]+/g, function (m) {
+      var url = m.replace(/[.,!?;:)\]”’]+$/, '');
+      var tail = m.slice(url.length);
+      return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>' + tail;
+    });
+  }
+
+  function memoListHtml() {
+    var notes = memoNotes();
+    if (!notes.length) {
+      return '<div class="memo-empty"><div class="ico">💬</div>' +
+        '<p class="t">생각나는 대로 카톡하듯 툭 던져 둬!</p>' +
+        '<p class="d">아래 칸에 적어 두면 이 폰에만 조용히 쌓여요.<br>찾고 싶을 땐 🔍 검색으로 찾으면 돼.</p></div>';
+    }
+    var q = memoQuery.trim().toLowerCase();
+    var list = q ? notes.filter(function (n) { return n.text.toLowerCase().indexOf(q) >= 0; }) : notes;
+    if (!list.length) {
+      return '<p class="memo-none">‘' + esc(memoQuery.trim()) + '’ 검색 결과가 없어요.</p>';
+    }
+    var out = '';
+    var day = '';
+    list.forEach(function (n) {
+      var dl = memoDayLabel(n.ts);
+      if (dl !== day) { out += '<div class="day-sep"><span>' + dl + '</span></div>'; day = dl; }
+      out += '<div class="msg' + (n.pinned ? ' pinned' : '') + '" data-mid="' + esc(n.id) + '">' +
+        (n.pinned ? '<span class="pinmark" aria-hidden="true">📌</span>' : '') +
+        '<span class="mt">' + memoTime(n.ts) + '</span>' +
+        '<div class="bub" role="button" tabindex="0" data-act="msg-open" data-id="' + esc(n.id) + '">' + linkify(n.text) + '</div>' +
+        '</div>';
+    });
+    return out;
+  }
+
+  function updateMemoCount() {
+    var el = $('#memoCount');
+    if (!el) return;
+    var q = memoQuery.trim().toLowerCase();
+    el.textContent = q ? state.chatNotes.filter(function (x) { return x.text.toLowerCase().indexOf(q) >= 0; }).length + '개' : '';
+  }
+  function renderMemoList() {
+    var box = $('#memoList');
+    if (!box) return;
+    box.innerHTML = memoListHtml();
+    box.classList.toggle('is-empty', !state.chatNotes.length);
+    updateMemoCount();
+  }
+
+  function memoSearchHtml() {
+    return '<div class="memo-search">' + ICO.search +
+      '<input id="memoSearch" type="search" inputmode="search" placeholder="메모 검색" autocomplete="off" value="' + esc(memoQuery) + '" aria-label="메모 검색">' +
+      '<span class="cnt" id="memoCount"></span>' +
+      '<button type="button" class="cls" data-act="memo-search-close" aria-label="검색 닫기">✕</button>' +
+      '</div>';
+  }
+
+  function pinbarHtml(pinned) {
+    if (!pinned.length) return '';
+    return '<div class="pinbar" data-open="' + (pinbarOpen ? '1' : '0') + '">' +
+      '<button type="button" class="pinbar-head" data-act="pinbar-toggle" aria-expanded="' + (pinbarOpen ? 'true' : 'false') + '">' +
+        '<span aria-hidden="true">📌</span><span>고정된 메모</span><span class="n">' + pinned.length + '</span>' +
+        '<span class="peek">' + esc(pinned[0].text.replace(/\s+/g, ' ').slice(0, 40)) + '</span>' +
+        '<span class="chev">' + ICO.chev + '</span>' +
+      '</button>' +
+      '<div class="pinlist"' + (pinbarOpen ? '' : ' hidden') + '>' +
+        pinned.map(function (n) {
+          return '<div class="pinrow">' +
+            '<button type="button" class="txt" data-act="pin-jump" data-id="' + esc(n.id) + '" title="이 메모로 가기">' + esc(n.text.replace(/\s+/g, ' ')) + '</button>' +
+            '<button type="button" class="cpy" data-act="pin-copy" data-id="' + esc(n.id) + '" aria-label="이 메모 복사">📋</button>' +
+            '</div>';
+        }).join('') +
+      '</div></div>';
+  }
+
+  function renderMemo() {
+    var notes = memoNotes();
+    var pinned = notes.filter(function (n) { return n.pinned; });
+    $('#view-memo').innerHTML =
+      '<div class="memo-head">' +
+        '<div class="memo-title-row"><div style="min-width:0">' +
+          '<p class="eyebrow">Memo</p>' +
+          '<h1 class="display">나와의 채팅<span class="deco">💬</span></h1>' +
+          '<p class="sub">' + (notes.length ? notes.length + '개 · ' : '') + '이 기기에만 저장돼요</p>' +
+        '</div>' +
+        '<button type="button" class="icon-btn" data-act="memo-search" aria-label="메모 검색" aria-pressed="' + (memoSearchOn ? 'true' : 'false') + '">' + ICO.search + '</button>' +
+        '</div>' +
+        pinbarHtml(pinned) +
+        (memoSearchOn ? memoSearchHtml() : '') +
+      '</div>' +
+      '<div class="memo-list' + (notes.length ? '' : ' is-empty') + '" id="memoList">' + memoListHtml() + '</div>';
+    updateMemoCount();
+  }
+
+  /* 하단 입력줄·탭바 높이를 재서 겹침 없이 배치 */
+  function syncMemoLayout() {
+    var de = document.documentElement;
+    var tabbar = $('.tabbar');
+    var th = (tabbar && window.innerWidth < 920) ? tabbar.offsetHeight : 0;
+    var main = $('.main');
+    var mr = main ? main.getBoundingClientRect() : null;
+    var comp = $('#memoComposer');
+    var topbar = $('.topbar');
+    var tbBottom = topbar ? Math.round(topbar.getBoundingClientRect().bottom) : 0;
+    var compH = comp ? comp.offsetHeight : 0;
+    var vv = window.visualViewport;
+    var kb = 0;
+    if (vv) {
+      var rawKb = Math.round(window.innerHeight - vv.height - vv.offsetTop);
+      kb = rawKb > 60 ? rawKb : 0;
+    }
+    de.style.setProperty('--kb-offset', kb + 'px');
+    de.style.setProperty('--tabbar-h', th + 'px');
+    var fill = Math.max(220, Math.round(window.innerHeight - tbBottom - compH - th - 44));
+    de.style.setProperty('--memo-fill', fill + 'px');
+    de.style.setProperty('--memo-left', mr ? Math.max(0, Math.round(mr.left)) + 'px' : '0px');
+    de.style.setProperty('--memo-right', mr ? Math.max(0, Math.round(window.innerWidth - mr.right)) + 'px' : '0px');
+    de.style.setProperty('--composer-h', compH + 'px');
+  }
+
+  function autoGrow(ta) {
+    if (!ta) return;
+    if (!ta.value) { ta.style.height = ''; return; }
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight || 40, 104) + 'px';
+  }
+
+  function scrollMemoBottom() {
+    requestAnimationFrame(function () {
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'auto' });
+      if (memoScrollPending) memoScrollPending = false;
+    });
+  }
+
+  function openMsgPop(id, el) {
+    var pop = $('#msgPop');
+    if (!pop || !el) return;
+    if (msgPopId === id && !pop.hidden) { closeMsgPop(); return; }
+    var note = noteById(id);
+    if (!note) return;
+    msgPopId = id;
+    pop.innerHTML =
+      '<button type="button" data-act="msg-copy" data-id="' + esc(id) + '">📋 복사</button>' +
+      '<button type="button" data-act="msg-pin" data-id="' + esc(id) + '">' + (note.pinned ? '📌 고정 해제' : '📌 상단 고정') + '</button>' +
+      '<button type="button" class="danger" data-act="msg-del" data-id="' + esc(id) + '">🗑️ 삭제</button>';
+    pop.hidden = false;
+    var r = el.getBoundingClientRect();
+    var pr = pop.getBoundingClientRect();
+    var left = Math.max(8, Math.min(r.right - pr.width, window.innerWidth - pr.width - 8));
+    var top = r.bottom + 6;
+    if (top + pr.height > window.innerHeight - 8) top = r.top - pr.height - 6;
+    pop.style.left = Math.round(left) + 'px';
+    pop.style.top = Math.round(Math.max(8, top)) + 'px';
+  }
+  function closeMsgPop() {
+    var pop = $('#msgPop');
+    if (pop && !pop.hidden) { pop.hidden = true; }
+    msgPopId = '';
+  }
+
+  /* ============================================================
      토스트
   ============================================================ */
   var toastTimer = null;
@@ -1688,7 +2037,7 @@
     var size = 0;
     try { size = new Blob([JSON.stringify(state)]).size; } catch (e) { size = JSON.stringify(state).length; }
     $('#storageInfo').textContent = '저장됨 · 일정 ' + state.events.length + ' · 카드 ' + state.cards.length +
-      ' · 내역 ' + state.expenses.length + ' · 체험단 ' + state.campaigns.length + ' · 약 ' + (size / 1024).toFixed(1) + 'KB';
+      ' · 내역 ' + state.expenses.length + ' · 체험단 ' + state.campaigns.length + ' · 메모 ' + state.chatNotes.length + ' · 약 ' + (size / 1024).toFixed(1) + 'KB';
   }
   function closeSheet() { $('#sheet').hidden = true; }
 
@@ -1731,6 +2080,7 @@
      클릭 처리
   ============================================================ */
   document.addEventListener('click', function (e) {
+    if (msgPopId && !e.target.closest('#msgPop') && !e.target.closest('[data-act="msg-open"]')) closeMsgPop();
     var tabBtn = e.target.closest('[data-tab]');
     if (tabBtn && !tabBtn.closest('[data-act]')) {
       go(tabBtn.getAttribute('data-tab'));
@@ -1949,6 +2299,71 @@
       return;
     }
 
+    /* ---- 메모 ---- */
+    if (act === 'memo-search') {
+      memoSearchOn = !memoSearchOn;
+      if (!memoSearchOn) memoQuery = '';
+      render();
+      var si = $('#memoSearch');
+      if (si) si.focus();
+      return;
+    }
+    if (act === 'memo-search-close') {
+      memoSearchOn = false; memoQuery = ''; render();
+      return;
+    }
+    if (act === 'pinbar-toggle') {
+      pinbarOpen = !pinbarOpen; render();
+      return;
+    }
+    if (act === 'pin-jump') {
+      if (memoSearchOn && memoQuery.trim()) {
+        memoQuery = '';
+        renderMemoList();
+        var sf = $('#memoSearch');
+        if (sf) sf.value = '';
+      }
+      var target = $$('.msg').filter(function (m) { return m.getAttribute('data-mid') === id; })[0];
+      if (target) {
+        if (target.scrollIntoView) target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        target.classList.add('flash');
+        setTimeout(function () { target.classList.remove('flash'); }, 1600);
+      }
+      return;
+    }
+    if (act === 'pin-copy') {
+      var pn = noteById(id);
+      if (pn) { copyText(pn.text); toast('메모를 복사했어요'); }
+      return;
+    }
+    if (act === 'msg-open') {
+      if (e.target.closest('.bub a')) return;   /* 말풍선 안 링크는 링크로 열기 */
+      openMsgPop(id, el);
+      return;
+    }
+    if (act === 'msg-copy') {
+      var mn = noteById(id);
+      if (mn) { copyText(mn.text); toast('메모를 복사했어요'); }
+      closeMsgPop();
+      return;
+    }
+    if (act === 'msg-pin') {
+      var mp = noteById(id);
+      if (!mp) return;
+      mp.pinned = !mp.pinned;
+      save(); closeMsgPop(); render();
+      toast(mp.pinned ? '메모를 상단에 고정했어요' : '고정을 풀었어요');
+      return;
+    }
+    if (act === 'msg-del') {
+      var di = state.chatNotes.findIndex(function (x) { return x.id === id; });
+      if (di < 0) return;
+      var dn = state.chatNotes.splice(di, 1)[0];
+      closeMsgPop(); save(); render();
+      toast('메모를 지웠어요', '실행취소', function () { state.chatNotes.push(dn); save(); render(); });
+      return;
+    }
+
     /* ---- 설정 ---- */
     if (act === 'settings') { openSheet(); return; }
     if (act === 'close-sheet') { closeSheet(); return; }
@@ -2072,6 +2487,21 @@
       });
       return;
     }
+
+    if (kind === 'memo') {
+      var mta = f.querySelector('.memo-ta');
+      var txt = String(mta && mta.value || '').trim();
+      if (!txt) { if (mta) mta.focus(); return; }
+      var note = { id: uid(), text: txt.slice(0, 2000), ts: Date.now(), pinned: false };
+      state.chatNotes.push(note);
+      if (mta) { mta.value = ''; autoGrow(mta); }
+      save();
+      memoScrollPending = true;
+      render();
+      var back = $('#memoInput');
+      if (back) back.focus();
+      return;
+    }
   });
 
   /* ============================================================
@@ -2091,6 +2521,14 @@
       var cnt = card.querySelector('[data-count]');
       if (cnt) cnt.textContent = val.length + '/300';
     }
+  });
+
+  /* 메모 입력줄 높이 조절 · 검색 실시간 필터 */
+  document.addEventListener('input', function (e) {
+    var t = e.target;
+    if (!t || !t.id) return;
+    if (t.id === 'memoInput') { autoGrow(t); syncMemoLayout(); return; }
+    if (t.id === 'memoSearch') { memoQuery = t.value; renderMemoList(); return; }
   });
 
   /* 기간 입력 — 시작일을 바꾸면 종료일 최소값을 따라가게 */
@@ -2155,7 +2593,18 @@
   document.addEventListener('change', syncCatSelect);
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeSheet();
+    if (e.key === 'Escape') { closeMsgPop(); closeSheet(); return; }
+    if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.matches && e.target.matches('.bub[data-act]')) {
+      e.preventDefault(); e.target.click(); return;
+    }
+    if (e.target && e.target.id === 'memoInput' && e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) {
+      e.preventDefault();
+      var mf = e.target.closest('form[data-form=memo]');
+      if (mf) {
+        if (mf.requestSubmit) mf.requestSubmit();
+        else mf.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      }
+    }
   });
   var fileInput = $('#importFile');
   if (fileInput) {
@@ -2169,6 +2618,14 @@
     render();
     window.scrollTo({ top: 0, behavior: 'auto' });
   });
+  window.addEventListener('resize', function () {
+    syncMemoLayout();
+    if (msgPopId) closeMsgPop();
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', syncMemoLayout);
+    window.visualViewport.addEventListener('scroll', syncMemoLayout);
+  }
 
   if (!location.hash) history.replaceState(null, '', '#today');
   render();
