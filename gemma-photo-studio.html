@@ -404,6 +404,69 @@
   .cntabs button.on .ti{filter:drop-shadow(0 0 8px rgba(169,155,255,.55))}
   .cnpane{display:none}
   .cnpane.on{display:block}
+
+  /* ---------- before / after ---------- */
+  .cmp-wrap{
+    position:relative;border-radius:16px;overflow:hidden;background:#000;
+    box-shadow:0 18px 44px rgba(0,0,0,.55);display:none;
+    touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  }
+  .cmp-wrap.on{display:block}
+  .cmp-wrap canvas{display:block;width:100%;height:100%;touch-action:none}
+  .cmp-wrap .hint{
+    position:absolute;left:50%;bottom:10px;transform:translateX(-50%);
+    background:rgba(8,9,12,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    color:#dfe4ee;font-size:11.5px;font-weight:600;
+    padding:6px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.1);
+    pointer-events:none;white-space:nowrap;max-width:92%;
+    transition:opacity .25s;
+  }
+  #cmpView.noimg .panel,#cmpView.noimg .cmp-strip{display:none}
+  .cmp-empty{gap:12px}
+  .cmp-slots{display:flex;gap:10px;width:100%;max-width:330px}
+  .cmp-slot{
+    flex:1;position:relative;aspect-ratio:3/4;border-radius:14px;
+    border:1.5px dashed #3b4155;background:rgba(255,255,255,.03);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+    color:var(--sub);font-size:12px;font-weight:800;overflow:hidden;
+  }
+  .cmp-slot:active{background:rgba(169,155,255,.09)}
+  .cmp-slot .plus{font-size:22px;font-weight:400;line-height:1;color:var(--sub)}
+  .cmp-slot .tag{
+    position:absolute;left:8px;top:8px;font-size:9.5px;font-weight:800;letter-spacing:.5px;
+    color:#d9d2ff;background:rgba(169,155,255,.16);border:1px solid rgba(169,155,255,.38);
+    border-radius:999px;padding:3px 7px;
+  }
+  .cmp-slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .cmp-strip{flex:0 0 auto;display:none;align-items:center;gap:8px;padding:8px 12px 2px}
+  .cmp-strip.on{display:flex}
+  .cmp-chip{
+    position:relative;flex:0 0 auto;width:52px;height:52px;border-radius:11px;
+    border:2px solid transparent;background:#20232d center/cover no-repeat;color:var(--sub);
+    display:grid;place-items:center;overflow:hidden;
+  }
+  .cmp-chip .ph{font-size:18px;font-weight:400;line-height:1}
+  .cmp-chip .t{
+    position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:8px;font-weight:800;
+    letter-spacing:.3px;color:#fff;background:rgba(0,0,0,.62);line-height:1.5;padding:1px 0;
+  }
+  .cmp-chip.sel{border-color:var(--acc);box-shadow:0 0 0 3px rgba(169,155,255,.16)}
+  .cmp-chip.has .ph{display:none}
+  .cmp-tipt{font-size:11px;color:var(--sub2);line-height:1.45;margin-left:2px}
+
+  /* 비교 모드 안쪽 탭 */
+  .ctabs{display:flex;padding:8px 10px 4px;gap:4px}
+  .ctabs button{
+    flex:1;height:42px;border-radius:12px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:2px;
+    color:var(--sub);font-size:11px;font-weight:700;letter-spacing:-.1px;
+  }
+  .ctabs button.on{color:var(--txt);background:var(--panel2)}
+  .ctabs button .ti{width:20px;height:20px;display:block}
+  .ctabs button .ti svg{width:20px;height:20px;display:block;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .ctabs button.on .ti{filter:drop-shadow(0 0 8px rgba(169,155,255,.55))}
+  .cvpane{display:none}
+  .cvpane.on{display:block}
 </style>
 </head>
 <body>
@@ -416,6 +479,7 @@
 <nav class="modes" id="modes">
   <button data-mode="edit" class="on"><span class="em">📷</span>사진 편집</button>
   <button data-mode="card"><span class="em">📰</span>카드뉴스</button>
+  <button data-mode="cmp"><span class="em">🪞</span>겹쳐보기</button>
 </nav>
 
 <main class="modeview" id="editView">
@@ -758,9 +822,136 @@
 
 </main>
 
+<!-- ============ 비포 · 애프터 ============ -->
+<main class="modeview" id="cmpView" hidden>
+
+  <div class="stage" id="cmpStage">
+    <div class="cmp-wrap" id="cmpWrap">
+      <canvas id="cmpCanvas" width="900" height="1200"></canvas>
+      <div class="hint" id="cmpHint">끌어서 맞추기 · 두 손가락 확대</div>
+    </div>
+
+    <div class="empty cmp-empty" id="cmpEmpty">
+      <div class="ico">🪞</div>
+      <h2>비포 · 애프터 사진 두 장</h2>
+      <p>같은 자리에서 찍은 두 장을 넣으면<br>얼굴 라인 변화가 겹쳐 보여요</p>
+      <div class="cmp-slots">
+        <button class="cmp-slot" id="cmpSlotBefore"><span class="tag">BEFORE</span><span class="plus">＋</span><span>비포 사진</span></button>
+        <button class="cmp-slot" id="cmpSlotAfter"><span class="tag">AFTER</span><span class="plus">＋</span><span>애프터 사진</span></button>
+      </div>
+      <p class="tiny">🔒 폰 안에서만 처리되고 어디로도 전송되지 않아요</p>
+    </div>
+  </div>
+
+  <div class="cmp-strip" id="cmpStrip">
+    <button class="cmp-chip" id="cmpChipBefore"><span class="ph">＋</span><span class="t">BEFORE</span></button>
+    <button class="cmp-chip" id="cmpChipAfter"><span class="ph">＋</span><span class="t">AFTER</span></button>
+    <span class="cmp-tipt">사진을 눌러<br>맞출 사진 선택</span>
+  </div>
+
+  <section class="panel">
+    <nav class="ctabs">
+      <button data-ctab="cmpMode" class="on"><span class="ti"><svg viewBox="0 0 24 24"><rect x="3.4" y="6.2" width="12" height="12" rx="2"/><rect x="8.6" y="2.6" width="12" height="12" rx="2"/></svg></span><span>비교</span></button>
+      <button data-ctab="cmpFit"><span class="ti"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.4"/><path d="M12 2.9v3.4"/><path d="M12 17.7v3.4"/><path d="M2.9 12h3.4"/><path d="M17.7 12h3.4"/></svg></span><span>맞춤</span></button>
+      <button data-ctab="cmpOut"><span class="ti"><svg viewBox="0 0 24 24"><path d="M12 3.2v11.2"/><path d="m7.4 10.3 4.6 4.6 4.6-4.6"/><path d="M4.2 17.6v1.4a1.8 1.8 0 0 0 1.8 1.8h12a1.8 1.8 0 0 0 1.8-1.8v-1.4"/></svg></span><span>저장</span></button>
+    </nav>
+
+    <div class="body">
+      <!-- 비교 -->
+      <div class="cvpane on" data-cvpane="cmpMode">
+        <div class="row">
+          <span class="lbl">방식</span>
+          <div class="seg small cseg" data-cseg="mode">
+            <button data-val="overlay" class="on">겹쳐보기</button>
+            <button data-val="split">반반 비교</button>
+          </div>
+        </div>
+        <div class="row" id="cmpOpacityRow">
+          <span class="lbl">투명도</span>
+          <input type="range" id="cmpOpacity" min="0" max="100" step="1" value="50" aria-label="겹침 투명도">
+          <span class="val" id="cmpOpacityVal">50%</span>
+        </div>
+        <div class="row" id="cmpSplitRow" style="display:none">
+          <span class="lbl">분할선</span>
+          <input type="range" id="cmpSplit" min="0" max="100" step="1" value="50" aria-label="분할선">
+          <span class="val" id="cmpSplitVal">50%</span>
+        </div>
+        <div class="row">
+          <span class="lbl">라벨</span>
+          <div class="seg small cseg" data-cseg="labels">
+            <button data-val="on" class="on">표시</button>
+            <button data-val="off">숨김</button>
+          </div>
+        </div>
+        <p class="note" id="cmpModeNote">💡 투명도를 40~60%로 두면 얼굴선이 가장 잘 보여요.</p>
+      </div>
+
+      <!-- 맞춤 -->
+      <div class="cvpane" data-cvpane="cmpFit">
+        <div class="row">
+          <span class="lbl">대상</span>
+          <div class="seg small cseg" data-cseg="target">
+            <button data-val="before">비포</button>
+            <button data-val="after" class="on">애프터</button>
+          </div>
+        </div>
+        <div class="row">
+          <span class="lbl">확대</span>
+          <input type="range" id="cmpZoom" min="0.5" max="2" step="0.01" value="1" aria-label="확대">
+          <span class="val" id="cmpZoomVal">100%</span>
+        </div>
+        <div class="row">
+          <span class="lbl">회전</span>
+          <input type="range" id="cmpRot" min="-15" max="15" step="0.5" value="0" aria-label="회전">
+          <span class="val" id="cmpRotVal">0.0°</span>
+        </div>
+        <div class="btnrow">
+          <button class="btn sm" id="cmpResetOne"><svg viewBox="0 0 24 24"><path d="M12 2.9v3.6"/><path d="M12 17.5v3.6"/><path d="M2.9 12h3.6"/><path d="M17.5 12h3.6"/><circle cx="12" cy="12" r="3.5"/></svg> 맞춤 초기화</button>
+          <button class="btn sm" id="cmpResetAll"><svg viewBox="0 0 24 24"><path d="M15.4 7.2h4.4V2.8"/><path d="M19.4 7.4a8.2 8.2 0 1 0 1.2 6.4"/></svg> 둘 다 초기화</button>
+        </div>
+        <div class="btnrow">
+          <button class="btn sm" id="cmpChangeBefore">비포 바꾸기</button>
+          <button class="btn sm" id="cmpChangeAfter">애프터 바꾸기</button>
+        </div>
+        <p class="note">💡 끌어서 맞추고, 두 손가락으로 확대·회전</p>
+      </div>
+
+      <!-- 저장 -->
+      <div class="cvpane" data-cvpane="cmpOut">
+        <div class="row">
+          <span class="lbl">형식</span>
+          <div class="seg small cseg" data-cseg="fmt">
+            <button data-val="jpeg" class="on">JPG</button>
+            <button data-val="png">PNG</button>
+          </div>
+        </div>
+        <div class="row">
+          <span class="lbl">품질</span>
+          <input type="range" id="cmpQuality" min="60" max="100" step="1" value="92">
+          <span class="val" id="cmpQualityVal">92%</span>
+        </div>
+        <div class="outsum">
+          <span>결과</span>
+          <b id="cmpInfo">—</b>
+        </div>
+        <div class="btnrow">
+          <button class="btn primary" id="cmpSave"><svg viewBox="0 0 24 24"><path d="M12 3.2v11.2"/><path d="m7.4 10.3 4.6 4.6 4.6-4.6"/><path d="M4.2 17.6v1.4a1.8 1.8 0 0 0 1.8 1.8h12a1.8 1.8 0 0 0 1.8-1.8v-1.4"/></svg> 비교 이미지 저장</button>
+        </div>
+        <div class="btnrow">
+          <button class="btn" id="cmpShare"><svg viewBox="0 0 24 24"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="3"/><circle cx="8.6" cy="8.6" r="1.7"/><path d="m4.4 17.4 4.3-4.3a1.6 1.6 0 0 1 2.3 0l5.2 5.2"/></svg> 사진앱에 저장</button>
+        </div>
+        <p class="note"><b>EXIF 촬영정보 없이 저장돼요.</b> 지금 보이는 화면 그대로 담겨요.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
 <div class="toast" id="toast"></div>
 <input type="file" id="fileInput" accept="image/*" multiple hidden>
 <input type="file" id="cnFile" accept="image/*" hidden>
+<input type="file" id="cmpBeforeInput" accept="image/*" hidden>
+<input type="file" id="cmpAfterInput" accept="image/*" hidden>
 
 <script>
 (function () {
@@ -2697,14 +2888,20 @@
 
   function setMode(m) {
     var card = (m === 'card');
-    editView.hidden = card;
+    var cmp = (m === 'cmp');
+    var cmpViewEl = q('#cmpView');
+    editView.hidden = card || cmp;
     cardView.hidden = !card;
+    if (cmpViewEl) cmpViewEl.hidden = !cmp;
     document.body.classList.toggle('cnmode', card);
+    document.body.classList.toggle('cmpmode', cmp);
     qa('#modes button').forEach(function (b) { b.classList.toggle('on', b.dataset.mode === m); });
     if (card) {
       render();
       requestAnimationFrame(function () { fitPreview(); render(); });
       setTimeout(function () { render(); fitPreview(); }, 260);
+    } else if (cmp) {
+      window.dispatchEvent(new Event('cmp:show'));
     } else {
       window.dispatchEvent(new Event('resize'));
     }
@@ -2740,6 +2937,618 @@
 
   // 테스트/디버그용 (앱 동작에는 쓰이지 않음)
   window.__cn = { state: cn, render: render, setMode: setMode, paint: paint, dims: dims, cur: cur };
+
+})();
+</script>
+
+<script>
+/* ==================== 비포 · 애프터 겹쳐보기 ==================== */
+(function () {
+  'use strict';
+
+  var q  = function (s, r) { return (r || document).querySelector(s); };
+  var qa = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+  var MAX_EDGE = 1600;   // 결과 이미지 긴 변
+
+  var st = {
+    before: null, after: null, frame: null,
+    mode: 'overlay',      // overlay | split
+    opacity: 50,
+    split: 50,
+    labels: true,
+    target: 'after',
+    fmt: 'jpeg',
+    quality: 0.92
+  };
+
+  var view    = q('#cmpView');
+  if (!view) return;
+
+  var stageEl = q('#cmpStage');
+  var wrapEl  = q('#cmpWrap');
+  var cv      = q('#cmpCanvas');
+  var ctx     = cv.getContext('2d');
+  var emptyEl = q('#cmpEmpty');
+  var stripEl = q('#cmpStrip');
+  var hintEl  = q('#cmpHint');
+  var toastEl = q('#toast');
+  var inBefore = q('#cmpBeforeInput');
+  var inAfter  = q('#cmpAfterInput');
+
+  var toastTimer = null;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('on'); }, 1900);
+  }
+  function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+  function both() { return !!(st.before && st.after); }
+  function targetPhoto() { return st[st.target]; }
+
+  /* ---------------- 불러오기 ---------------- */
+
+  function setFrameFrom(w, h) {
+    var k = Math.min(1, MAX_EDGE / Math.max(w, h));
+    st.frame = { w: Math.max(1, Math.round(w * k)), h: Math.max(1, Math.round(h * k)) };
+    cv.width = st.frame.w;
+    cv.height = st.frame.h;
+  }
+  // 회전해도 프레임을 비우지 않도록, 필요한 최소 배율을 구한다 (회전 0이면 그냥 꽉 채우는 배율)
+  function fitFor(p) {
+    var W = st.frame.w, H = st.frame.h;
+    var base = Math.max(W / p.w, H / p.h);
+    if (!p.rot) return base;
+    var th = p.rot * Math.PI / 180, c = Math.cos(th), sn = Math.sin(th);
+    var hw = W / 2, hh = H / 2, need = 0;
+    var pts = [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]];
+    for (var i = 0; i < 4; i++) {
+      var x = pts[i][0] * c + pts[i][1] * sn;
+      var y = -pts[i][0] * sn + pts[i][1] * c;
+      var a = Math.abs(x) / (p.w / 2), b = Math.abs(y) / (p.h / 2);
+      if (a > need) need = a;
+      if (b > need) need = b;
+    }
+    return Math.max(base, need);
+  }
+
+  function loadFile(which, file) {
+    if (!file) return;
+    var okType = /^image\//.test(file.type || '') || /\.(jpe?g|png|webp|heic|heif|gif|bmp)$/i.test(file.name || '');
+    if (!okType) { toast('사진 파일이 아니에요'); return; }
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.decoding = 'async';
+    img.onload = function () {
+      var w = img.naturalWidth || img.width;
+      var h = img.naturalHeight || img.height;
+      if (!w || !h) { URL.revokeObjectURL(url); toast('이 사진은 열 수 없어요'); return; }
+      var old = st[which];
+      if (!st.frame) setFrameFrom(w, h);
+      st[which] = { img: img, url: url, w: w, h: h, name: file.name || '', zoom: 1, tx: 0, ty: 0, rot: 0 };
+      if (old && old.url) setTimeout(function () { URL.revokeObjectURL(old.url); }, 8000);
+      var other = (which === 'before') ? 'after' : 'before';
+      if (which === 'after' || !st[other]) st.target = which;
+      hintEl.style.opacity = '1';
+      clearTimeout(hintTimer);
+      hintTimer = setTimeout(function () { hintEl.style.opacity = '0'; }, 4200);
+      refresh();
+      toast((which === 'before' ? '비포' : '애프터') + ' 사진을 넣었어요');
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); toast('이 사진은 열 수 없어요'); };
+    img.src = url;
+  }
+  var hintTimer = null;
+
+  /* ---------------- 그리기 ---------------- */
+
+  function drawPhoto(c, p, alpha) {
+    if (!p) return;
+    var s = fitFor(p) * p.zoom;
+    c.save();
+    c.globalAlpha = (alpha == null) ? 1 : alpha;
+    c.translate(st.frame.w / 2 + p.tx, st.frame.h / 2 + p.ty);
+    c.rotate(p.rot * Math.PI / 180);
+    c.imageSmoothingEnabled = true;
+    c.imageSmoothingQuality = 'high';
+    c.drawImage(p.img, -p.w * s / 2, -p.h * s / 2, p.w * s, p.h * s);
+    c.restore();
+  }
+
+  function pill(c, text, x, y, fs, align) {
+    var padX = Math.round(fs * 0.7);
+    var h = Math.round(fs * 1.9);
+    var w = Math.round(c.measureText(text).width + padX * 2);
+    var left = (align === 'right') ? x - w : x;
+    var r = h / 2;
+    c.beginPath();
+    c.moveTo(left + r, y);
+    c.lineTo(left + w - r, y);
+    c.arc(left + w - r, y + r, r, -Math.PI / 2, Math.PI / 2);
+    c.lineTo(left + r, y + h);
+    c.arc(left + r, y + r, r, Math.PI / 2, Math.PI * 1.5);
+    c.closePath();
+    c.fillStyle = 'rgba(10,11,16,.62)';
+    c.fill();
+    c.strokeStyle = 'rgba(255,255,255,.24)';
+    c.lineWidth = Math.max(1, Math.round(h / 26));
+    c.stroke();
+    c.fillStyle = '#ffffff';
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText(text, left + w / 2, y + h / 2 + 1);
+  }
+
+  function drawLabels(c, W, H) {
+    if (!st.labels || !both()) return;
+    var fs = Math.max(10, Math.round(Math.min(W, H) * 0.036));
+    var m = Math.round(Math.min(W, H) * 0.028);
+    c.save();
+    c.font = '800 ' + fs + 'px -apple-system, BlinkMacSystemFont, "Pretendard Variable", "Apple SD Gothic Neo", sans-serif';
+    c.textBaseline = 'middle';
+    pill(c, 'BEFORE', m, m, fs, 'left');
+    pill(c, 'AFTER', W - m, m, fs, 'right');
+    c.restore();
+  }
+
+  function drawSplit(c, W, H) {
+    var x = W * st.split / 100;
+    var r = Math.max(16, Math.round(Math.min(W, H) * 0.05));
+    c.save();
+    c.strokeStyle = 'rgba(255,255,255,.92)';
+    c.lineWidth = Math.max(2, Math.round(W / 520));
+    c.beginPath();
+    c.moveTo(x, 0);
+    c.lineTo(x, H);
+    c.stroke();
+
+    c.beginPath();
+    c.arc(x, H / 2, r, 0, Math.PI * 2);
+    c.fillStyle = 'rgba(255,255,255,.95)';
+    c.fill();
+
+    // 손잡이 그립 (세로 막대 두 개)
+    var bw = Math.max(2, r * 0.12), bh = r * 0.95, gap = r * 0.3;
+    c.lineCap = 'round';
+    c.strokeStyle = '#1b1e28';
+    c.lineWidth = bw;
+    c.beginPath();
+    c.moveTo(x - gap, H / 2 - bh / 2); c.lineTo(x - gap, H / 2 + bh / 2);
+    c.moveTo(x + gap, H / 2 - bh / 2); c.lineTo(x + gap, H / 2 + bh / 2);
+    c.stroke();
+    c.restore();
+  }
+
+  function paint(c) {
+    var W = st.frame.w, H = st.frame.h;
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.globalAlpha = 1;
+    c.globalCompositeOperation = 'source-over';
+    c.fillStyle = '#0b0c10';
+    c.fillRect(0, 0, W, H);
+    if (!st.before && !st.after) return;
+    if (!both()) { drawPhoto(c, st.before || st.after); return; }
+    if (st.mode === 'overlay') {
+      drawPhoto(c, st.before, 1);
+      drawPhoto(c, st.after, st.opacity / 100);
+    } else {
+      drawPhoto(c, st.after, 1);
+      c.save();
+      c.beginPath();
+      c.rect(0, 0, W * st.split / 100, H);
+      c.clip();
+      drawPhoto(c, st.before, 1);
+      c.restore();
+      drawSplit(c, W, H);
+    }
+    drawLabels(c, W, H);
+  }
+
+  function draw() { if (st.frame) paint(ctx); }
+
+  /* ---------------- 배치 / 동기화 ---------------- */
+
+  function layout() {
+    if (!st.frame) return;
+    var box = stageEl.getBoundingClientRect();
+    if (!box.width || !box.height) return;
+    var availW = Math.max(60, box.width - 24);
+    var availH = Math.max(60, box.height - 20);
+    var ar = st.frame.w / st.frame.h;
+    var w = availW, h = w / ar;
+    if (h > availH) { h = availH; w = h * ar; }
+    wrapEl.style.width = Math.round(w) + 'px';
+    wrapEl.style.height = Math.round(h) + 'px';
+  }
+
+  function setSeg(grp, val) {
+    qa('.cseg[data-cseg="' + grp + '"] button').forEach(function (b) {
+      b.classList.toggle('on', b.dataset.val === val);
+    });
+  }
+
+  function setChip(which, p) {
+    var el = q(which === 'before' ? '#cmpChipBefore' : '#cmpChipAfter');
+    if (!el) return;
+    if (p) {
+      el.style.backgroundImage = 'url("' + p.url + '")';
+      el.classList.add('has');
+    } else {
+      el.style.backgroundImage = '';
+      el.classList.remove('has');
+    }
+    el.classList.toggle('sel', !!p && st.target === which && both());
+  }
+
+  function syncUI() {
+    var p = targetPhoto();
+    q('#cmpOpacity').value = st.opacity;
+    q('#cmpOpacityVal').textContent = st.opacity + '%';
+    q('#cmpSplit').value = st.split;
+    q('#cmpSplitVal').textContent = st.split + '%';
+    q('#cmpOpacityRow').style.display = (st.mode === 'overlay') ? 'flex' : 'none';
+    q('#cmpSplitRow').style.display = (st.mode === 'split') ? 'flex' : 'none';
+    q('#cmpOpacityRow').classList.toggle('dim', !both());
+    q('#cmpSplitRow').classList.toggle('dim', !both());
+    q('#cmpModeNote').textContent = (st.mode === 'overlay')
+      ? '💡 투명도를 40~60%로 두면 얼굴선이 가장 잘 보여요.'
+      : '💡 선을 좌우로 움직이면 왼쪽 비포 · 오른쪽 애프터로 나뉘어요.';
+    setSeg('mode', st.mode);
+    setSeg('target', st.target);
+    setSeg('labels', st.labels ? 'on' : 'off');
+    setSeg('fmt', st.fmt);
+    q('#cmpZoom').value = p ? p.zoom : 1;
+    q('#cmpZoomVal').textContent = Math.round((p ? p.zoom : 1) * 100) + '%';
+    q('#cmpRot').value = p ? p.rot : 0;
+    q('#cmpRotVal').textContent = (p ? p.rot : 0).toFixed(1).replace('-', '−') + '°';
+    q('#cmpZoom').disabled = !p;
+    q('#cmpRot').disabled = !p;
+    setChip('before', st.before);
+    setChip('after', st.after);
+  }
+
+  function updateInfo() {
+    var el = q('#cmpInfo');
+    if (!st.frame) { el.textContent = '—'; return; }
+    el.textContent = st.frame.w + ' × ' + st.frame.h + ' · ' + (st.fmt === 'png' ? 'PNG' : 'JPG');
+  }
+
+  function refresh() {
+    var any = !!(st.before || st.after);
+    view.classList.toggle('noimg', !any);
+    emptyEl.style.display = any ? 'none' : 'flex';
+    wrapEl.classList.toggle('on', any);
+    stripEl.classList.toggle('on', any);
+    if (!st.frame) { syncUI(); updateInfo(); return; }
+    layout();
+    syncUI();
+    draw();
+    updateInfo();
+  }
+
+  /* ---------------- 손가락 조작 ---------------- */
+
+  var pointers = {};
+  var gesture = null;
+
+  function framePt(e) {
+    var r = cv.getBoundingClientRect();
+    return {
+      x: (e.clientX - r.left) / Math.max(1, r.width) * st.frame.w,
+      y: (e.clientY - r.top) / Math.max(1, r.height) * st.frame.h
+    };
+  }
+  function pxScale() {
+    var r = cv.getBoundingClientRect();
+    return st.frame.w / Math.max(1, r.width);
+  }
+  function ptrIds() { return Object.keys(pointers); }
+
+  wrapEl.addEventListener('pointerdown', function (e) {
+    if (!st.frame) return;
+    e.preventDefault();
+    try { wrapEl.setPointerCapture(e.pointerId); } catch (err) {}
+    pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+    var ids = ptrIds();
+
+    if (ids.length === 1) {
+      var pt = framePt(e);
+      var nearSplit = (st.mode === 'split' && both() &&
+        Math.abs(pt.x - st.frame.w * st.split / 100) < Math.max(16, st.frame.w * 0.05));
+      if (nearSplit) {
+        gesture = { kind: 'split' };
+        return;
+      }
+      if (st.mode === 'split' && both()) {
+        st.target = (pt.x < st.frame.w * st.split / 100) ? 'before' : 'after';
+      }
+      var p = targetPhoto();
+      gesture = { kind: 'photo', x0: e.clientX, y0: e.clientY, tx0: p ? p.tx : 0, ty0: p ? p.ty : 0 };
+      syncUI();
+    } else if (ids.length === 2) {
+      var a = pointers[ids[0]], b = pointers[ids[1]];
+      var p2 = targetPhoto();
+      gesture = {
+        kind: 'pinch',
+        d0: Math.hypot(a.x - b.x, a.y - b.y) || 1,
+        a0: Math.atan2(b.y - a.y, b.x - a.x),
+        zoom0: p2 ? p2.zoom : 1,
+        rot0: p2 ? p2.rot : 0
+      };
+    }
+  }, { passive: false });
+
+  wrapEl.addEventListener('pointermove', function (e) {
+    if (!pointers[e.pointerId]) return;
+    pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+    if (!gesture || !st.frame) return;
+    e.preventDefault();
+
+    if (gesture.kind === 'split') {
+      st.split = clamp(framePt(e).x / st.frame.w * 100, 0, 100);
+      var si = q('#cmpSplit');
+      si.value = st.split;
+      q('#cmpSplitVal').textContent = Math.round(st.split) + '%';
+      draw();
+      return;
+    }
+
+    var p = targetPhoto();
+    if (!p) return;
+
+    if (gesture.kind === 'photo') {
+      var k = pxScale();
+      p.tx = clamp(gesture.tx0 + (e.clientX - gesture.x0) * k, -st.frame.w * 0.75, st.frame.w * 0.75);
+      p.ty = clamp(gesture.ty0 + (e.clientY - gesture.y0) * k, -st.frame.h * 0.75, st.frame.h * 0.75);
+      draw();
+      return;
+    }
+
+    if (gesture.kind === 'pinch') {
+      var ids = ptrIds();
+      if (ids.length < 2) return;
+      var a = pointers[ids[0]], b = pointers[ids[1]];
+      var d = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+      var ang = Math.atan2(b.y - a.y, b.x - a.x);
+      p.zoom = clamp(gesture.zoom0 * (d / gesture.d0), 0.5, 2);
+      var dr = (ang - gesture.a0) * 180 / Math.PI;
+      p.rot = clamp(gesture.rot0 + dr, -15, 15);
+      q('#cmpZoom').value = p.zoom;
+      q('#cmpZoomVal').textContent = Math.round(p.zoom * 100) + '%';
+      q('#cmpRot').value = p.rot;
+      q('#cmpRotVal').textContent = p.rot.toFixed(1).replace('-', '−') + '°';
+      draw();
+    }
+  }, { passive: false });
+
+  function endPtr(e) {
+    if (!pointers[e.pointerId]) return;
+    delete pointers[e.pointerId];
+    var ids = ptrIds();
+    if (!ids.length) { gesture = null; return; }
+    if (ids.length === 1) {
+      var rest = pointers[ids[0]];
+      var p = targetPhoto();
+      gesture = { kind: 'photo', x0: rest.x, y0: rest.y, tx0: p ? p.tx : 0, ty0: p ? p.ty : 0 };
+    }
+  }
+  wrapEl.addEventListener('pointerup', endPtr);
+  wrapEl.addEventListener('pointercancel', endPtr);
+  wrapEl.addEventListener('lostpointercapture', endPtr);
+  wrapEl.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+
+  /* ---------------- 컨트롤 ---------------- */
+
+  q('#cmpOpacity').addEventListener('input', function (e) {
+    st.opacity = Number(e.target.value);
+    q('#cmpOpacityVal').textContent = st.opacity + '%';
+    draw();
+  });
+  q('#cmpSplit').addEventListener('input', function (e) {
+    st.split = Number(e.target.value);
+    q('#cmpSplitVal').textContent = st.split + '%';
+    draw();
+  });
+  q('#cmpZoom').addEventListener('input', function (e) {
+    var p = targetPhoto();
+    if (!p) return;
+    p.zoom = Number(e.target.value);
+    q('#cmpZoomVal').textContent = Math.round(p.zoom * 100) + '%';
+    draw();
+  });
+  q('#cmpRot').addEventListener('input', function (e) {
+    var p = targetPhoto();
+    if (!p) return;
+    p.rot = Number(e.target.value);
+    q('#cmpRotVal').textContent = p.rot.toFixed(1).replace('-', '−') + '°';
+    draw();
+  });
+  q('#cmpQuality').addEventListener('input', function (e) {
+    st.quality = Number(e.target.value) / 100;
+    q('#cmpQualityVal').textContent = e.target.value + '%';
+  });
+
+  qa('.cseg[data-cseg]').forEach(function (g) {
+    g.addEventListener('click', function (e) {
+      var b = e.target.closest('button');
+      if (!b || !g.contains(b)) return;
+      qa('button', g).forEach(function (x) { x.classList.toggle('on', x === b); });
+      var grp = g.dataset.cseg, val = b.dataset.val;
+      if (grp === 'mode') { st.mode = val; syncUI(); draw(); }
+      else if (grp === 'target') { st.target = val; syncUI(); }
+      else if (grp === 'labels') { st.labels = (val === 'on'); draw(); }
+      else if (grp === 'fmt') {
+        st.fmt = val;
+        q('#cmpQuality').disabled = (val === 'png');
+        updateInfo();
+      }
+    });
+  });
+
+  qa('.ctabs button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      qa('.ctabs button').forEach(function (x) { x.classList.toggle('on', x === b); });
+      qa('.cvpane').forEach(function (x) { x.classList.toggle('on', x.dataset.cvpane === b.dataset.ctab); });
+      requestAnimationFrame(layout);
+    });
+  });
+
+  function resetPhoto(p) { if (p) { p.zoom = 1; p.tx = 0; p.ty = 0; p.rot = 0; } }
+  q('#cmpResetOne').addEventListener('click', function () {
+    resetPhoto(targetPhoto()); syncUI(); draw(); toast('맞춤을 초기화했어요');
+  });
+  q('#cmpResetAll').addEventListener('click', function () {
+    resetPhoto(st.before); resetPhoto(st.after); syncUI(); draw(); toast('둘 다 초기화했어요');
+  });
+
+  q('#cmpSlotBefore').addEventListener('click', function () { inBefore.click(); });
+  q('#cmpSlotAfter').addEventListener('click', function () { inAfter.click(); });
+  q('#cmpChangeBefore').addEventListener('click', function () { inBefore.click(); });
+  q('#cmpChangeAfter').addEventListener('click', function () { inAfter.click(); });
+  inBefore.addEventListener('change', function (e) {
+    loadFile('before', e.target.files && e.target.files[0]);
+    e.target.value = '';
+  });
+  inAfter.addEventListener('change', function (e) {
+    loadFile('after', e.target.files && e.target.files[0]);
+    e.target.value = '';
+  });
+
+  function chipClick(which) {
+    if (!st[which]) { (which === 'before' ? inBefore : inAfter).click(); return; }
+    st.target = which;
+    syncUI();
+  }
+  q('#cmpChipBefore').addEventListener('click', function () { chipClick('before'); });
+  q('#cmpChipAfter').addEventListener('click', function () { chipClick('after'); });
+
+  /* 드래그 앤 드롭 (데스크톱) */
+  [['#cmpSlotBefore', 'before'], ['#cmpSlotAfter', 'after']].forEach(function (pair) {
+    var el = q(pair[0]);
+    if (!el) return;
+    el.addEventListener('dragover', function (e) { e.preventDefault(); });
+    el.addEventListener('drop', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      loadFile(pair[1], f);
+    });
+  });
+  stageEl.addEventListener('dragover', function (e) { e.preventDefault(); });
+  stageEl.addEventListener('drop', function (e) {
+    e.preventDefault();
+    var fs = Array.prototype.slice.call((e.dataTransfer && e.dataTransfer.files) || []);
+    if (!fs.length) return;
+    if (fs.length >= 2) { loadFile('before', fs[0]); loadFile('after', fs[1]); }
+    else if (!st.before) loadFile('before', fs[0]);
+    else loadFile('after', fs[0]);
+  });
+
+  /* ---------------- 저장 ---------------- */
+
+  function dataURLToBlob(url) {
+    var parts = url.split(',');
+    var mime = /:(.*?);/.exec(url)[1];
+    var bin = atob(parts[1]);
+    var len = bin.length;
+    var buf = new Uint8Array(len);
+    for (var i = 0; i < len; i++) buf[i] = bin.charCodeAt(i);
+    return new Blob([buf], { type: mime });
+  }
+
+  function makeFile() {
+    var c = document.createElement('canvas');
+    c.width = st.frame.w;
+    c.height = st.frame.h;
+    paint(c.getContext('2d'));
+    var mime = (st.fmt === 'png') ? 'image/png' : 'image/jpeg';
+    var url = c.toDataURL(mime, st.fmt === 'png' ? 1 : st.quality);
+    var actual = url.slice(5, url.indexOf(';'));
+    var blob = dataURLToBlob(url);
+    c.width = 1; c.height = 1;
+    var d = new Date();
+    var pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+    var ext = (actual === 'image/png') ? 'png' : 'jpg';
+    var name = 'gemma-before-after-' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) +
+      '-' + pad(d.getHours()) + pad(d.getMinutes()) + '.' + ext;
+    try { return new File([blob], name, { type: actual }); }
+    catch (err) { blob.name = name; return blob; }
+  }
+
+  function download(file) {
+    var url = URL.createObjectURL(file);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = file.name || 'gemma-before-after.jpg';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () {
+      if (a.parentNode) a.parentNode.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 1500);
+  }
+
+  function canShareFiles(files) {
+    try {
+      return !!(navigator.canShare && navigator.share && navigator.canShare({ files: files }));
+    } catch (e) { return false; }
+  }
+
+  q('#cmpSave').addEventListener('click', function () {
+    if (!st.frame) { toast('사진을 먼저 넣어 주세요'); return; }
+    download(makeFile());
+    toast('비교 이미지를 저장했어요');
+  });
+
+  q('#cmpShare').addEventListener('click', function () {
+    if (!st.frame) { toast('사진을 먼저 넣어 주세요'); return; }
+    var files = [makeFile()];
+    if (!canShareFiles(files)) {
+      download(files[0]);
+      toast('공유가 안 돼서 파일로 내려받았어요');
+      return;
+    }
+    navigator.share({ files: files }).then(function () {
+      toast('공유 시트에서 ‘이미지 저장’을 눌러 주세요');
+    }).catch(function (err) {
+      if (err && err.name === 'AbortError') return;
+      toast('공유를 열 수 없어요');
+    });
+  });
+
+  /* ---------------- 모드 전환 / 크기 ---------------- */
+
+  function onShow() {
+    requestAnimationFrame(function () { refresh(); });
+    setTimeout(function () { if (!view.hidden) { layout(); draw(); } }, 260);
+  }
+  window.addEventListener('cmp:show', onShow);
+  window.addEventListener('resize', function () { if (!view.hidden) layout(); });
+  window.addEventListener('orientationchange', function () {
+    setTimeout(function () { if (!view.hidden) { layout(); draw(); } }, 260);
+  });
+  if (window.ResizeObserver) {
+    new ResizeObserver(function () {
+      if (!view.hidden && st.frame) layout();
+    }).observe(stageEl);
+  }
+
+  syncUI();
+  updateInfo();
+  refresh();
+
+  // 테스트/디버그용 (앱 동작에는 쓰이지 않음)
+  window.__cmp = {
+    state: st,
+    loadFile: loadFile,
+    draw: draw,
+    paint: paint,
+    layout: layout,
+    makeFile: makeFile,
+    refresh: refresh
+  };
 
 })();
 </script>
