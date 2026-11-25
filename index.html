@@ -1418,6 +1418,7 @@
   /* ===== 진짜 포켓몬 일러스트 (PokeAPI GitHub CDN) ===== */
   var POKE_SPRITE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/';
   var POKE_ART = POKE_SPRITE + 'other/official-artwork/';
+  var POKE_ITEMS = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/';
 
   var MON = {
     pikachu:   { id: 25,  ko: '피카츄',   z: 1.96 },
@@ -1442,25 +1443,25 @@
   }
   function monArtUrl(name){
     var m = monInfo(name);
-    return m.item ? (POKE_SPRITE + 'items/' + m.item + '.png') : (POKE_ART + m.id + '.png');
+    return m.item ? (POKE_ITEMS + m.item + '.png') : (POKE_ART + m.id + '.png');
   }
   function monSpriteUrl(name){
     var m = monInfo(name);
-    return m.item ? (POKE_SPRITE + 'items/' + m.item + '.png') : (POKE_SPRITE + m.id + '.png');
+    return m.item ? (POKE_ITEMS + m.item + '.png') : (POKE_SPRITE + m.id + '.png');
   }
 
   /* 루틴 행동별 포켓몬 + 소품 배지 (아침/저녁에 그림이 조금씩 달라진다) */
   var ART_MON = {
-    eat:   { am: 'snorlax',   pm: 'pikachu',    badge: '🍚' },
-    teeth: { am: 'pikachu',   pm: 'charmander', badge: '🪥' },
+    eat:   { am: 'pikachu',   pm: 'snorlax',    badge: '🍚' },
+    teeth: { am: 'charmander',pm: 'pikachu',    badge: '🪥' },
     bath:  { am: 'squirtle',  pm: 'piplup',     badge: '🛁' },
     wash:  { am: 'squirtle',  pm: 'piplup',     badge: '🧼' },
     dress: { am: 'eevee',     pm: 'jigglypuff', badge: '👕' },
     bag:   { am: 'bulbasaur', pm: 'togepi',     badge: '🎒' },
     tidy:  { am: 'chikorita', pm: 'meowth',     badge: '🧸' },
     book:  { am: 'mew',       pm: 'sylveon',    badge: '📖' },
-    shoes: { am: 'pikachu',   pm: 'eevee',      badge: '👟' },
-    wake:  { am: 'pikachu',   pm: 'jigglypuff', badge: '⏰' },
+    shoes: { am: 'piplup',    pm: 'eevee',      badge: '👟' },
+    wake:  { am: 'snorlax',   pm: 'jigglypuff', badge: '⏰' },
     water: { am: 'squirtle',  pm: 'piplup',     badge: '💧' },
     star:  { am: 'pikachu',   pm: 'eevee',      badge: '✨' }
   };
@@ -2350,7 +2351,7 @@
     }
     box.innerHTML = list.map(function(it){
       return '<div class="edit-row">' +
-        '<span class="em">' + icon(it.icon) + '</span>' +
+        '<span class="em">' + monSprite(it.icon) + '</span>' +
         '<input type="text" data-routine="' + esc(it.id) + '" value="' + esc(it.text) + '" placeholder="예: 세수하고 양치하기" maxlength="40">' +
         '<button type="button" class="del" data-del-routine="' + esc(it.id) + '" aria-label="삭제">✕</button>' +
       '</div>';

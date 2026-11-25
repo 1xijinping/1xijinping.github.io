@@ -506,7 +506,15 @@
           <button data-val="800">가볍게 800</button>
         </div>
       </div>
-      <p class="note" id="fitNote">💡 ‘여백’은 잘리지 않고 남는 곳을 채워요. ‘꽉 채우기’는 가운데 기준으로 잘라요.</p>
+      <div class="row" id="zoomRow">
+        <span class="lbl">확대</span>
+        <input type="range" id="zoom" min="1" max="3" step="0.05" value="1" aria-label="확대">
+        <span class="val" id="zoomVal">100%</span>
+      </div>
+      <div class="btnrow" style="margin-top:2px">
+        <button class="btn sm" id="posResetBtn"><svg viewBox="0 0 24 24"><path d="M12 2.9v3.6"/><path d="M12 17.5v3.6"/><path d="M2.9 12h3.6"/><path d="M17.5 12h3.6"/><circle cx="12" cy="12" r="3.5"/></svg> 위치 초기화</button>
+      </div>
+      <p class="note" id="fitNote">💡 사진을 끌어서 옮기고, 두 손가락으로 벌리거나 ‘확대’로 키워 잘리는 자리를 정해요.</p>
     </div>
 
     <!-- 워터마크 -->
@@ -855,6 +863,7 @@
           nw: nw, nh: nh,
           canvas: null,
           tr: { s: 1, ox: 0, oy: 0, cw: bw, ch: bh },
+          zoom: 1, panX: 0, panY: 0,   // 사진마다 따로 기억하는 확대·이동값
           ops: [],
           edited: false
         };
@@ -907,47 +916,65 @@
     return p.canvas;
   }
 
-  // 프레임 합성 + 저장된 편집 다시 그리기
-  function renderFrame(p) {
-    var c = ensureCanvas(p);
+  // 사진이 놓이는 자리 계산 (확대·이동 반영) — 그리기·포인터 변환·제스처가 모두 이 값을 쓴다
+  function computeLayout(p) {
     var d = frameDims(p.bw, p.bh, state.resize.ratio);
-    if (c.width !== d.w || c.height !== d.h) { c.width = d.w; c.height = d.h; }
-    var ctx = p.ctx;
     var cw = d.w, ch = d.h;
+    var mode = (state.resize.ratio === 'orig') ? 'crop' : state.resize.mode;
+    var s0 = (mode === 'crop') ? Math.max(cw / p.bw, ch / p.bh) : Math.min(cw / p.bw, ch / p.bh);
+    var z = clamp(Number(p.zoom) || 1, 1, 3);
+    var s = s0 * z;
+    var dw = p.bw * s, dh = p.bh * s;
+
+    // 보이는 창: 꽉 채우기는 프레임 전체, 여백·블러배경은 사진이 들어간 사각형
+    var clip = (mode === 'crop')
+      ? { x: 0, y: 0, w: cw, h: ch }
+      : { x: (cw - p.bw * s0) / 2, y: (ch - p.bh * s0) / 2, w: p.bw * s0, h: p.bh * s0 };
+
+    // 이동 허용 범위 (사진 원본 좌표) — 창 안에 빈 곳이 생기지 않게
+    var maxX = Math.max(0, (dw - clip.w) / 2) / s;
+    var maxY = Math.max(0, (dh - clip.h) / 2) / s;
+    p.panX = maxX > 0 ? clamp(Number(p.panX) || 0, -maxX, maxX) : 0;
+    p.panY = maxY > 0 ? clamp(Number(p.panY) || 0, -maxY, maxY) : 0;
+
+    var ox = clip.x + (clip.w - dw) / 2 + p.panX * s;
+    var oy = clip.y + (clip.h - dh) / 2 + p.panY * s;
+    return { cw: cw, ch: ch, mode: mode, s0: s0, s: s, zoom: z, dw: dw, dh: dh, ox: ox, oy: oy, clip: clip };
+  }
+
+  // 프레임 합성 + 저장된 편집 다시 그리기
+  function renderFrame(p, opt) {
+    var c = ensureCanvas(p);
+    var L = computeLayout(p);
+    if (c.width !== L.cw || c.height !== L.ch) { c.width = L.cw; c.height = L.ch; }
+    var ctx = p.ctx;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, cw, ch);
+    ctx.clearRect(0, 0, L.cw, L.ch);
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
-    var mode = (state.resize.ratio === 'orig') ? 'crop' : state.resize.mode;
-    var s = (mode === 'crop') ? Math.max(cw / p.bw, ch / p.bh) : Math.min(cw / p.bw, ch / p.bh);
-    var dw = p.bw * s, dh = p.bh * s;
-    var ox = (cw - dw) / 2, oy = (ch - dh) / 2;
-    p.tr = { s: s, ox: ox, oy: oy, cw: cw, ch: ch };
+    // 사진·모자이크가 함께 쓰는 변환 (확대·이동 포함)
+    p.tr = { s: L.s, ox: L.ox, oy: L.oy, cw: L.cw, ch: L.ch, clip: L.clip };
 
-    if (mode === 'fit') {
+    if (L.mode === 'fit') {
       ctx.fillStyle = state.resize.bg;
-      ctx.fillRect(0, 0, cw, ch);
-    } else if (mode === 'blurbg') {
-      drawBlurBg(ctx, p, cw, ch);
+      ctx.fillRect(0, 0, L.cw, L.ch);
+    } else if (L.mode === 'blurbg') {
+      drawBlurBg(ctx, p, L.cw, L.ch);
     }
 
-    if (mode === 'crop') {
-      // 잘라내기: 영역 밖은 그리지 않음
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(0, 0, cw, ch);
-      ctx.clip();
-      ctx.drawImage(p.img, ox, oy, dw, dh);
-      ctx.restore();
-    } else {
-      ctx.drawImage(p.img, ox, oy, dw, dh);
-    }
-
+    // 사진과 모자이크 획을 같은 변환으로, 같은 창에 잘라서 그린다
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(L.clip.x, L.clip.y, L.clip.w, L.clip.h);
+    ctx.clip();
+    ctx.drawImage(p.img, L.ox, L.oy, L.dw, L.dh);
     replayOps(p);
+    ctx.restore();
+
     syncWmCanvasSize(p);
     if (state.photos[state.cur] === p) { fitStage(); drawWm(); updateOutInfo(); }
-    markThumb(p);
+    if (!opt || !opt.skipThumb) markThumb(p);
   }
 
   function drawBlurBg(ctx, p, cw, ch) {
@@ -1046,6 +1073,14 @@
 
   function paintSegment(p, a, b, rBase, mode) {
     var s = p.tr.s, ox = p.tr.ox, oy = p.tr.oy;
+    var ctx = p.ctx;
+    // 그리는 동안에도 보이는 창 밖으로 칠이 새지 않게 (확대·이동 상태에서도 결과와 같게)
+    ctx.save();
+    if (p.tr.clip) {
+      ctx.beginPath();
+      ctx.rect(p.tr.clip.x, p.tr.clip.y, p.tr.clip.w, p.tr.clip.h);
+      ctx.clip();
+    }
     var A = { x: ox + a.x * s, y: oy + a.y * s };
     var B = { x: ox + b.x * s, y: oy + b.y * s };
     var R = Math.max(0.6, rBase * s);
@@ -1053,7 +1088,8 @@
     var step = Math.max(1, R * 0.34);
     var inb = function (px, py) { return px > -R && px < p.bw + R && py > -R && py < p.bh + R; };
     if (d <= step) {
-      if (inb((A.x - ox) / s, (A.y - oy) / s)) stampAt(p.ctx, strokeSrc, A.x, A.y, R, mode);
+      if (inb((A.x - ox) / s, (A.y - oy) / s)) stampAt(ctx, strokeSrc, A.x, A.y, R, mode);
+      ctx.restore();
       return;
     }
     var n = Math.ceil(d / step);
@@ -1063,8 +1099,9 @@
       var py = A.y + (B.y - A.y) * t;
       var bx = (px - ox) / s, by = (py - oy) / s;
       if (!inb(bx, by)) continue;
-      stampAt(p.ctx, strokeSrc, px, py, R, mode);
+      stampAt(ctx, strokeSrc, px, py, R, mode);
     }
+    ctx.restore();
   }
 
   function replayOps(p) {
@@ -1145,6 +1182,156 @@
   wrapEl.addEventListener('pointercancel', endStroke);
   wrapEl.addEventListener('lostpointercapture', endStroke);
   wrapEl.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+
+  /* ---------------- 리사이즈: 확대 · 이동 제스처 ---------------- */
+
+  var rPtrs = {};       // pointerId -> {x, y} (클라이언트 좌표)
+  var rStart = null;    // 제스처 시작 스냅샷
+  var rRaf = 0;
+
+  function rList() {
+    var a = [];
+    for (var k in rPtrs) { if (Object.prototype.hasOwnProperty.call(rPtrs, k)) a.push(rPtrs[k]); }
+    return a;
+  }
+  function rDist(a) { return Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1; }
+  function rMid(a) { return { x: (a[0].x + a[1].x) / 2, y: (a[0].y + a[1].y) / 2 }; }
+
+  function syncZoomUI(p) {
+    var z = p ? clamp(Number(p.zoom) || 1, 1, 3) : 1;
+    var el = $('#zoom');
+    if (el) el.value = z;
+    var v = $('#zoomVal');
+    if (v) v.textContent = Math.round(z * 100) + '%';
+  }
+
+  function rSnapshot(p) {
+    var L = computeLayout(p);
+    var rect = p.canvas.getBoundingClientRect();
+    var sn = {
+      p: p, rect: rect,
+      kx: p.canvas.width / Math.max(1, rect.width),
+      ky: p.canvas.height / Math.max(1, rect.height),
+      s0: L.s0, s: L.s, clip: L.clip, zoom: L.zoom,
+      anchor: null, dist0: 1, lastX: 0, lastY: 0
+    };
+    var a = rList();
+    if (a.length >= 2) {
+      // 두 손가락: 지금 손가락 사이 지점 아래의 ‘사진 좌표’를 고정해 두고 확대
+      sn.dist0 = rDist(a);
+      var mid = rMid(a);
+      var cx = (mid.x - rect.left) * sn.kx;
+      var cy = (mid.y - rect.top) * sn.ky;
+      sn.anchor = { x: (cx - L.ox) / L.s, y: (cy - L.oy) / L.s };
+    } else if (a.length === 1) {
+      sn.lastX = a[0].x;
+      sn.lastY = a[0].y;
+    }
+    return sn;
+  }
+
+  function rBegin() {
+    var p = curPhoto();
+    if (!p || !p.canvas) { rStart = null; return; }
+    rStart = rSnapshot(p);
+  }
+
+  function rPaint() {
+    if (!rStart || !rStart.p) return;
+    if (rRaf) return;
+    var p = rStart.p;
+    rRaf = requestAnimationFrame(function () {
+      rRaf = 0;
+      if (!p.canvas) return;
+      renderFrame(p, { skipThumb: true });
+      syncZoomUI(p);
+    });
+  }
+
+  wrapEl.addEventListener('pointerdown', function (e) {
+    if (state.tab !== 'resize') return;
+    var p = curPhoto();
+    if (!p || !p.canvas) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    rPtrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+    try { wrapEl.setPointerCapture(e.pointerId); } catch (err) {}
+    rBegin();
+    hintEl.style.opacity = '0';
+  }, { passive: false });
+
+  wrapEl.addEventListener('pointermove', function (e) {
+    if (state.tab !== 'resize') return;
+    if (!rStart || !Object.prototype.hasOwnProperty.call(rPtrs, e.pointerId)) return;
+    var p = rStart.p;
+    if (!p || !p.canvas || p !== curPhoto()) return;
+    e.preventDefault();
+    rPtrs[e.pointerId].x = e.clientX;
+    rPtrs[e.pointerId].y = e.clientY;
+
+    var sn = rStart;
+    var a = rList();
+
+    if (a.length >= 2) {
+      var mid = rMid(a);
+      var z = clamp(sn.zoom * (rDist(a) / sn.dist0), 1, 3);
+      var ns = sn.s0 * z;
+      var cx = (mid.x - sn.rect.left) * sn.kx;
+      var cy = (mid.y - sn.rect.top) * sn.ky;
+      var ox = cx - sn.anchor.x * ns;
+      var oy = cy - sn.anchor.y * ns;
+      p.zoom = z;
+      p.panX = (ox - sn.clip.x - (sn.clip.w - p.bw * ns) / 2) / ns;
+      p.panY = (oy - sn.clip.y - (sn.clip.h - p.bh * ns) / 2) / ns;
+    } else {
+      var dx = (e.clientX - sn.lastX) * sn.kx;
+      var dy = (e.clientY - sn.lastY) * sn.ky;
+      sn.lastX = e.clientX;
+      sn.lastY = e.clientY;
+      p.panX = (Number(p.panX) || 0) + dx / sn.s;
+      p.panY = (Number(p.panY) || 0) + dy / sn.s;
+    }
+    rPaint();
+  }, { passive: false });
+
+  function rEnd(e) {
+    if (e && Object.prototype.hasOwnProperty.call(rPtrs, e.pointerId)) delete rPtrs[e.pointerId];
+    if (state.tab !== 'resize') { rStart = null; return; }
+    if (rList().length) { rBegin(); return; }   // 두 손가락 → 한 손가락으로 바뀌면 기준을 다시 잡는다
+    var p = rStart && rStart.p;
+    rStart = null;
+    if (!p || !p.canvas) return;
+    if (rRaf) { cancelAnimationFrame(rRaf); rRaf = 0; }
+    renderFrame(p);
+    syncZoomUI(p);
+  }
+  wrapEl.addEventListener('pointerup', rEnd);
+  wrapEl.addEventListener('pointercancel', rEnd);
+  wrapEl.addEventListener('lostpointercapture', rEnd);
+
+  // 확대 슬라이더
+  var zoomEl = $('#zoom');
+  zoomEl.addEventListener('input', function (e) {
+    var p = curPhoto();
+    if (!p || !p.canvas) return;
+    p.zoom = clamp(Number(e.target.value) || 1, 1, 3);
+    renderFrame(p, { skipThumb: true });
+    $('#zoomVal').textContent = Math.round(p.zoom * 100) + '%';
+  });
+  zoomEl.addEventListener('change', function () {
+    var p = curPhoto();
+    if (p && p.canvas) { renderFrame(p); syncZoomUI(p); }
+  });
+
+  // 위치 초기화
+  $('#posResetBtn').addEventListener('click', function () {
+    var p = curPhoto();
+    if (!p) { toast('먼저 사진을 불러와 주세요'); return; }
+    p.zoom = 1; p.panX = 0; p.panY = 0;
+    if (p.canvas) renderFrame(p);
+    syncZoomUI(p);
+    toast('가운데로 맞췄어요');
+  });
 
   /* ---------------- 워터마크 ---------------- */
 
@@ -1300,6 +1487,7 @@
     fitStage();
     drawWm();
     updateOutInfo();
+    syncZoomUI(p);
     renderThumbs();
     showHint();
   }
@@ -1307,8 +1495,10 @@
   var hintTimer = null;
   function showHint() {
     if (!curPhoto()) return;
-    hintEl.textContent = '손가락으로 문질러 주세요';
-    hintEl.style.opacity = (state.tab === 'mosaic') ? '1' : '0';
+    if (state.tab === 'mosaic') hintEl.textContent = '손가락으로 문질러 주세요';
+    else if (state.tab === 'resize') hintEl.textContent = '끌어서 옮기기 · 두 손가락으로 확대';
+    else { hintEl.style.opacity = '0'; return; }
+    hintEl.style.opacity = '1';
     clearTimeout(hintTimer);
     hintTimer = setTimeout(function () { hintEl.style.opacity = '0'; }, 3200);
   }
@@ -1504,9 +1694,8 @@
       state.tab = b.dataset.tab;
       $$('.tabs button').forEach(function (x) { x.classList.toggle('on', x === b); });
       $$('.pane').forEach(function (x) { x.classList.toggle('on', x.dataset.pane === state.tab); });
-      if (state.tab === 'mosaic') showHint();
-      else hintEl.style.opacity = '0';
-      requestAnimationFrame(function () { fitStage(); paintBrushViz(); });
+      showHint();
+      requestAnimationFrame(function () { fitStage(); paintBrushViz(); syncZoomUI(curPhoto()); });
     });
   });
 
@@ -1631,13 +1820,13 @@
   function updateFitNote() {
     var n = $('#fitNote');
     if (state.resize.ratio === 'orig') {
-      n.textContent = '💡 원본 비율이에요. 다른 비율을 고르면 자동으로 맞춰 그려져요.';
+      n.textContent = '💡 사진을 끌어서 옮기고, 두 손가락으로 벌리거나 위 ‘확대’로 키워 보세요.';
     } else if (state.resize.mode === 'crop') {
-      n.textContent = '💡 ‘꽉 채우기’는 가운데 기준으로 잘라냅니다. 잘리는 부분은 미리보기에서 확인하세요.';
+      n.textContent = '💡 ‘꽉 채우기’는 프레임에 꽉 차게 잘라요. 끌어서 위치를, 확대로 크기를 정하세요.';
     } else if (state.resize.mode === 'blurbg') {
-      n.textContent = '💡 남는 공간을 원본 사진의 흐릿한 배경으로 채워요. 잘리지 않아요.';
+      n.textContent = '💡 남는 곳은 사진을 흐리게 깔아 채워요. 끌어서 옮기고 두 손가락으로 키울 수 있어요.';
     } else {
-      n.textContent = '💡 잘리지 않고 남는 곳을 여백색으로 채워요.';
+      n.textContent = '💡 남는 곳을 여백색으로 채워요. 사진을 끌어서 옮기고 두 손가락·확대로 키울 수 있어요.';
     }
   }
 
@@ -1726,6 +1915,7 @@
     paintBrushViz();
     updateFitNote();
     updateBgRow();
+    syncZoomUI(null);
     setTimeout(fitStage, 60);
     // 패널 높이가 바뀌면 사진 영역도 다시 맞춤
     if (window.ResizeObserver) {
@@ -1742,6 +1932,17 @@
   }
   boot();
   window.addEventListener('load', function () { setTimeout(fitStage, 80); });
+
+  // 테스트/디버그용 (앱 동작에는 쓰이지 않음)
+  window.__ps = {
+    state: state,
+    curPhoto: curPhoto,
+    select: select,
+    computeLayout: computeLayout,
+    renderFrame: renderFrame,
+    replayOps: replayOps,
+    toBase: toBase
+  };
 
 })();
 </script>
